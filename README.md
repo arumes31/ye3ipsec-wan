@@ -133,7 +133,7 @@ The container configurations and credentials can be displayed using the command 
 
 The /etc/swanctl folder is persistent.  
 
-Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start.  
+Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, also add NET_RAW if you are using podman.  
 
 # [Prerequisite](https://github.com/palw3ey/ye3ipsec/blob/main/doc/prerequisite.md)
 
@@ -160,8 +160,8 @@ Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start.
 
 | name | version |
 | :- |:- |
-|ye3ipsec | 1.1.5 |
-|strongswan | 6.0.2 |
+|ye3ipsec | 1.1.6 |
+|strongswan | 6.0.3 |
 |alpine | 3.22.1 |
 
 # [Changelog](https://github.com/palw3ey/ye3ipsec/blob/main/doc/changelog.md)

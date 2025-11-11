@@ -1,4 +1,7 @@
 # Changelog
+## [1.1.6] - 2025-11-11
+### Changed
+- new version : strongSwan 6.0.3
 ## [1.1.5] - 2025-08-24
 ### Changed
 - new version : strongSwan 6.0.2, Alpine Linux 3.22.1
