@@ -45,13 +45,14 @@ These are the env variables and their default values.
 |Y_FIREWALL_ENABLE | yes/no | no | yes, to enable the firewall rules |
 |Y_FIREWALL_IPSEC_PORT | yes/no | yes | yes, to add ipsec port and protocol |
 |Y_FIREWALL_NAT | yes/no | yes | yes, to add NAT rule |
+|Y_FIREWALL_S2S_NAT | yes/no | no | yes, to add NAT (MASQUERADE) rule for Site-to-Site remote subnets. Default is no (optional). |
 |Y_FIREWALL_MANGLE | yes/no | yes | yes, to add Mangle rule |
 |Y_FIREWALL_REVOCATION | yes/no | yes | yes, to add revocation rule |
 |Y_FIREWALL_REVOCATION_PORT | port number | "80,8080" | port number for crl and ocsp |
 |Y_FIREWALL_INTERCLIENT | yes/no | yes | yes, to allow clients to talk to each other |
 |Y_FIREWALL_LAN | yes/no | yes | yes, to allow client to communicate to lan address : 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7 |
 |Y_FIREWALL_INTERNET | yes/no | yes | yes, to allow client to communicate with internet |
-|Y_FIREWALL_COMMENT_PREFIX | text | ye3ipsec | comment prefix added to firewall rules |
+|Y_FIREWALL_COMMENT_PREFIX | text | ye3ipsec-wan | comment prefix added to firewall rules |
 |-|-|-|-|
 |Y_CERT_ENABLE | yes/no | yes | yes, to activate the RA (remote access) IKEv2 Certificate profile |
 |Y_CERT_DAYS | integer | 365 | RA IKEv2 Certificate profile : How long to certify for |
@@ -97,6 +98,7 @@ These are the env variables and their default values.
 |Y_S2S_PSK_REMOTE_ADDRS | IP address or domain |  | S2S IKEv2 PSK profile : remote address |
 |Y_S2S_PSK_LOCAL_TS | IP Address, and mask |  | S2S IKEv2 PSK profile : local traffic selectors |
 |Y_S2S_PSK_REMOTE_TS | IP Address, and mask |  | S2S IKEv2 PSK profile : remote traffic selectors |
+|Y_S2S_PSK_USERS | text | | S2S IKEv2 PSK profile : list of remote tunnels to create (secret:local_id:remote_id:local_ts:remote_ts:remote_addr) separated by space. |
 |Y_S2S_PSK_START_ACTION | text | trap | S2S IKEv2 PSK profile : start action |
 |Y_S2S_PSK_LOCAL_ID | text | *(randomly generated, if not set)* | S2S IKEv2 PSK profile : local identity |
 |Y_S2S_PSK_REMOTE_ID | text | *(randomly generated, if not set)* | S2S IKEv2 PSK profile : remote identity |

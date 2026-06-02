@@ -1,7 +1,17 @@
 # Changelog
 ## [1.1.7] - 2026-06-02
 ### Added
-- automatic allow routing and NAT from S2S remote subnets to Internet when firewall is enabled
+- Project renamed to **ye3ipsec-wan**
+- Image author changed to **arumes31**
+- Upgrade to **strongSwan 6.0.6** (Security and Post-Quantum support)
+- Implemented **Multi-Stage Docker Build** for smaller image size
+- Added **Container Healthchecks** (swanctl --stats)
+- Support for **Multiple S2S Tunnels** via `Y_S2S_PSK_USERS`
+- Added **nftables** support with automatic fallback to iptables
+- Refactored `entrypoint.sh` for better modularity
+- Modernized default cipher suites (AES-GCM, ECP384)
+- Automatic allow routing and NAT from S2S remote subnets to Internet
+- New environment variable: `Y_FIREWALL_S2S_NAT` to optionally enable NAT for S2S tunnels
 ## [1.1.6] - 2025-11-11
 ### Changed
 - new version : strongSwan 6.0.3
@@ -51,7 +61,7 @@
 - the variable $vg_ip in entrypoint.sh : now curl timeout is set to 5 seconds to identify the external ip
 - ameliorations in firewall.sh : use of chain, add revocation port, add f_firewall_delete_all function
 - the prefix CRED_Y_ in logs now display multi users credentials in one line
-- move bypass_container_env.sh to /etc/swanctl/ye3ipsec/, a symlink is created in /etc/profile.d/
+- move bypass_container_env.sh to /etc/swanctl/ye3ipsec-wan/, a symlink is created in /etc/profile.d/
 ## [1.0.6] - 2024-09-20
 ### Added
 - upgrade to alpine 3.20.3

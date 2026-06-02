@@ -15,10 +15,10 @@ vg_date=$(date "+$Y_DATE_FORMAT")
 vg_dir_swanctl="/etc/swanctl"
 
 # to load other env var
-if [[ -f $vg_dir_swanctl/ye3ipsec/bypass_container_env.sh ]] ; then
+if [[ -f $vg_dir_swanctl/ye3ipsec-wan/bypass_container_env.sh ]] ; then
 
 	# create/update symbolic link for bypass_container_env.sh
-	ln -sfn $vg_dir_swanctl/ye3ipsec/bypass_container_env.sh /etc/profile.d/bypass_container_env.sh
+	ln -sfn $vg_dir_swanctl/ye3ipsec-wan/bypass_container_env.sh /etc/profile.d/bypass_container_env.sh
 	
 	# source
 	source /etc/profile.d/bypass_container_env.sh > /dev/null 2>&1		
@@ -28,7 +28,7 @@ fi
 vg_default_language="fr_FR"
 
 # script name
-vg_name=ye3ipsec
+vg_name=ye3ipsec-wan
 
 # get default interface
 vg_interface=$(route | awk '/^default/{print $NF}')
@@ -38,7 +38,7 @@ vg_interface_ip=$(ip addr show dev $vg_interface | grep 'inet ' | awk '{print $2
 vg_ip=$(curl -m $Y_URL_IP_CHECK_TIMEOUT -s $Y_URL_IP_CHECK)
 
 # credential directory, without ending slash
-vg_dir_credential=$vg_dir_swanctl/ye3ipsec/credential
+vg_dir_credential=$vg_dir_swanctl/ye3ipsec-wan/credential
 if [[ ! -d $vg_dir_credential ]]; then
     mkdir $vg_dir_credential
 fi
@@ -68,7 +68,7 @@ vg_file_external_key=$vg_dir_swanctl/private/privkey.pem
 vg_file_external_cert=$vg_dir_swanctl/x509/cert.pem
 
 # firewall function
-vg_file_firewall=$vg_dir_swanctl/ye3ipsec/firewall.sh
+vg_file_firewall=$vg_dir_swanctl/ye3ipsec-wan/firewall.sh
 
 # ============ [ function ] ============
 
@@ -374,6 +374,43 @@ function f_cert_users_random(){
 	fi
 }
 
+# get and create PSK and ids from Y_S2S_PSK_USERS
+function f_s2s_psk_users(){
+
+	if [[ ! -f $vg_dir_swanctl/conf.d/s2s_psk_users.conf ]] ; then
+	
+		vl_users=$1
+		vl_iteration=1
+		
+		echo "connections {"  > $vg_dir_swanctl/conf.d/s2s_psk_users.conf
+		echo "secrets {" > $vg_dir_swanctl/conf.d/s2s_psk_secrets.conf
+		
+		for vl_user in $vl_users; do
+			vl_iteration=$((vl_iteration+1))
+			
+			# format: secret:local_id:remote_id:local_ts:remote_ts:remote_addr
+			vl_secret=$(echo $vl_user | cut -d: -f1)
+			vl_local_id=$(echo $vl_user | cut -d: -f2)
+			vl_remote_id=$(echo $vl_user | cut -d: -f3)
+			vl_local_ts=$(echo $vl_user | cut -d: -f4)
+			vl_remote_ts=$(echo $vl_user | cut -d: -f5)
+			vl_remote_addr=$(echo $vl_user | cut -d: -f6)
+
+			echo -e "  conn-s2s_psk_$vl_iteration : template-conn { \n    local_addrs = %any \n    remote_addrs = $vl_remote_addr \n    local : template-local { \n      auth = psk \n      id = $vl_local_id \n    } \n    remote { \n      auth = psk \n      id = $vl_remote_id \n    } \n    children { \n      child-s2s_psk_$vl_iteration : template-child { \n        local_ts = $vl_local_ts \n        remote_ts = $vl_remote_ts \n        start_action = trap \n      } \n    } \n  }" >> $vg_dir_swanctl/conf.d/s2s_psk_users.conf
+			echo -e "  ike-s2s_psk_$vl_iteration { \n    secret = $vl_secret \n    id-0 = $vl_local_id \n    id-1 = $vl_remote_id \n  }" >> $vg_dir_swanctl/conf.d/s2s_psk_secrets.conf
+			
+			# Add to firewall subnets if NAT enabled
+			if [[ $Y_FIREWALL_S2S_NAT == "yes" ]]; then
+				Y_S2S_PSK_REMOTE_TS="$Y_S2S_PSK_REMOTE_TS,$vl_remote_ts"
+			fi
+		done
+		
+		echo "}" >> $vg_dir_swanctl/conf.d/s2s_psk_users.conf
+		echo "}" >> $vg_dir_swanctl/conf.d/s2s_psk_secrets.conf
+		
+	fi
+}
+
 function f_certificate_cn() {
     echo "$(openssl x509 -in $1 -noout -subject | sed -n 's/.*subject[[:space:]]*=[[:space:]]*CN[[:space:]]*=\([[:space:]]*\)\(.*\)/\2/p')"
 }
@@ -435,8 +472,8 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 		vg_aggressive=no
 	fi
 	
-	source $vg_dir_swanctl/ye3ipsec/strongswan.sh > $vg_dir_swanctl/ye3ipsec/strongswan.conf
-	ln -sfn $vg_dir_swanctl/ye3ipsec/strongswan.conf /etc/strongswan.conf
+	source $vg_dir_swanctl/ye3ipsec-wan/strongswan.sh > $vg_dir_swanctl/ye3ipsec-wan/strongswan.conf
+	ln -sfn $vg_dir_swanctl/ye3ipsec-wan/strongswan.conf /etc/strongswan.conf
 	
 	# credentials 
 	
@@ -524,6 +561,13 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			f_log "$i_enable : $i_firewall"
 			f_firewall_delete_all iptables &> /dev/null
     			f_firewall_delete_all ip6tables &> /dev/null
+			
+			# Use nftables if available
+			if command -v nft >/dev/null 2>&1; then
+				f_log "Using nftables"
+				f_firewall_nft $Y_POOL_IPV4 $vg_interface
+			fi
+
 			f_firewall iptables $Y_POOL_IPV4 $vg_interface
 			f_firewall ip6tables $Y_POOL_IPV6 $vg_interface
 		fi
@@ -554,7 +598,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			fi
 		fi
 		
-		source $vg_dir_swanctl/ye3ipsec/template.sh > $vg_dir_swanctl/conf.d/template.conf
+		source $vg_dir_swanctl/ye3ipsec-wan/template.sh > $vg_dir_swanctl/conf.d/template.conf
 		
 	else
 		rm $vg_dir_swanctl/conf.d/template.conf 2>/dev/null
@@ -564,7 +608,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	
 	if [[ $Y_CERT_ENABLE == "yes" ]]; then
 		f_log "$i_enable : $i_certificate"
-		source $vg_dir_swanctl/ye3ipsec/cert.sh > $vg_dir_swanctl/conf.d/cert.conf
+		source $vg_dir_swanctl/ye3ipsec-wan/cert.sh > $vg_dir_swanctl/conf.d/cert.conf
 		if [[ ! -z "$Y_CERT_USERS" ]]; then
 			f_cert_users "$Y_CERT_USERS"
 		fi
@@ -591,7 +635,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 
 	if [[ $Y_EAP_ENABLE == "yes" ]]; then
 		f_log "$i_enable : $i_eap"
-		source $vg_dir_swanctl/ye3ipsec/eap.sh > $vg_dir_swanctl/conf.d/eap.conf
+		source $vg_dir_swanctl/ye3ipsec-wan/eap.sh > $vg_dir_swanctl/conf.d/eap.conf
 		if [[ ! -z "$Y_EAP_USERS" ]]; then
 			f_eap_users "$Y_EAP_USERS"
 		fi
@@ -616,7 +660,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 
 	if [[ $Y_PSK_ENABLE == "yes" ]]; then
 		f_log "$i_enable : $i_psk"
-		source $vg_dir_swanctl/ye3ipsec/psk.sh > $vg_dir_swanctl/conf.d/psk.conf
+		source $vg_dir_swanctl/ye3ipsec-wan/psk.sh > $vg_dir_swanctl/conf.d/psk.conf
 		if [[ ! -z "$Y_PSK_USERS" ]]; then
 			f_psk_users "$Y_PSK_USERS"
 		fi
@@ -642,7 +686,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	
 	if [[ $Y_XAUTH_PSK_ENABLE == "yes" ]]; then
 		f_log "$i_enable : xauth psk"
-		source $vg_dir_swanctl/ye3ipsec/xauth_psk.sh > $vg_dir_swanctl/conf.d/xauth_psk.conf
+		source $vg_dir_swanctl/ye3ipsec-wan/xauth_psk.sh > $vg_dir_swanctl/conf.d/xauth_psk.conf
   		if [[ $Y_SHOW_CRED == "yes" ]]; then
 			f_show_cred Y_XAUTH_PSK_LOCAL_ID
 			f_show_cred Y_XAUTH_PSK_REMOTE_ID
@@ -656,7 +700,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	
 	if [[ $Y_XAUTH_RSA_ENABLE == "yes" ]]; then
 		f_log "$i_enable : xauth rsa"
-		source $vg_dir_swanctl/ye3ipsec/xauth_rsa.sh > $vg_dir_swanctl/conf.d/xauth_rsa.conf
+		source $vg_dir_swanctl/ye3ipsec-wan/xauth_rsa.sh > $vg_dir_swanctl/conf.d/xauth_rsa.conf
 	  	if [[ $Y_SHOW_CRED == "yes" ]]; then
 			f_show_cred Y_SERVER_CERT_CN
 			f_show_cred Y_CERT_CN
@@ -670,14 +714,22 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	
 	if [[ $Y_S2S_PSK_ENABLE == "yes" ]]; then
 		f_log "$i_enable : s2s psk"
-		source $vg_dir_swanctl/ye3ipsec/s2s_psk.sh > $vg_dir_swanctl/conf.d/s2s_psk.conf
+		source $vg_dir_swanctl/ye3ipsec-wan/s2s_psk.sh > $vg_dir_swanctl/conf.d/s2s_psk.conf
+		if [[ ! -z "$Y_S2S_PSK_USERS" ]]; then
+			f_s2s_psk_users "$Y_S2S_PSK_USERS"
+		fi
   		if [[ $Y_SHOW_CRED == "yes" ]]; then
 			f_show_cred Y_S2S_PSK_LOCAL_ID
 			f_show_cred Y_S2S_PSK_REMOTE_ID
 			f_show_cred Y_S2S_PSK_SECRET
+			if [[ -f $vg_dir_swanctl/conf.d/s2s_psk_users.conf ]]; then
+				f_log "    CRED_Y_S2S_PSK_USERS : $(cat $vg_dir_swanctl/conf.d/s2s_psk_users.conf | tr '\n' ' ' | tr -s ' ')"
+			fi
 		fi
 	else
 		mv -f $vg_dir_swanctl/conf.d/s2s_psk.conf $vg_dir_swanctl/conf.d/s2s_psk-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/s2s_psk_users.conf $vg_dir_swanctl/conf.d/s2s_psk_users-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/s2s_psk_secrets.conf $vg_dir_swanctl/conf.d/s2s_psk_secrets-$vg_date.dis 2>/dev/null
 	fi
 	
 	if [[ $Y_S2S_RSA_ENABLE == "yes" ]]; then
@@ -687,7 +739,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			Y_S2S_RSA_LOCAL_CERTS=serverCert.pem
 			Y_S2S_RSA_LOCAL_ID="$Y_SERVER_CERT_CN"
 		fi
-		source $vg_dir_swanctl/ye3ipsec/s2s_rsa.sh > $vg_dir_swanctl/conf.d/s2s_rsa.conf
+		source $vg_dir_swanctl/ye3ipsec-wan/s2s_rsa.sh > $vg_dir_swanctl/conf.d/s2s_rsa.conf
   		if [[ $Y_SHOW_CRED == "yes" ]]; then
 			f_show_cred Y_S2S_RSA_LOCAL_ID
 			f_show_cred Y_S2S_RSA_LOCAL_CERTS
@@ -700,7 +752,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 
  	if [[ $Y_CLIENT_ENABLE == "yes" ]]; then
 		f_log "$i_enable : client"
-		source $vg_dir_swanctl/ye3ipsec/client.sh > $vg_dir_swanctl/conf.d/client.conf
+		source $vg_dir_swanctl/ye3ipsec-wan/client.sh > $vg_dir_swanctl/conf.d/client.conf
  		if [[ $Y_SHOW_CRED == "yes" ]]; then
 			f_show_cred Y_CLIENT_REMOTE_ADDRESS
 			f_show_cred Y_CLIENT_LOCAL_AUTH

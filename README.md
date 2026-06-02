@@ -1,4 +1,4 @@
-# ye3ipsec
+# ye3ipsec-wan
 
 IPSec client and server based on Strongswan and Alpine. RA and S2S profile. GNS3 ready
 
@@ -16,7 +16,7 @@ podman run -dt \
   --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /lib/modules:/lib/modules:ro \
   -p 500:500/udp -p 4500:4500/udp -e Y_FIREWALL_ENABLE=yes \
   -e Y_EAP_USERS="tux1:StrongPassword1 tux2:StrongPassword2" \
-  --name myipsec docker.io/palw3ey/ye3ipsec
+  --name myipsec docker.io/palw3ey/ye3ipsec-wan
 ```
 ```bash
 # Docker command
@@ -25,7 +25,7 @@ docker run -dt \
   --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /lib/modules:/lib/modules:ro \
   -p 500:500/udp -p 4500:4500/udp -e Y_FIREWALL_ENABLE=yes \
   -e Y_EAP_USERS="tux1:StrongPassword1 tux2:StrongPassword2" \
-  --name myipsec docker.io/palw3ey/ye3ipsec
+  --name myipsec docker.io/palw3ey/ye3ipsec-wan
 ```
 ```bash
 # to auto-generate 10 random EAP users, add : -e Y_EAP_USERS_RANDOM=10
@@ -58,7 +58,7 @@ podman network create --ipv6 --subnet=10.2.192.0/23 --subnet=fd00::a02:c000/119 
  -e Y_FIREWALL_NAT=no --network=mynet46 --ip 10.2.192.254 --ip6 fd00::a02:c0fe -e Y_POOL_IPV4=10.2.193.0/24 -e Y_POOL_IPV6=fd00::a02:c100/120 -e Y_POOL_DNS4="1.1.1.1, 8.8.8.8" -e Y_POOL_DNS6="2606:4700:4700::1111, 2001:4860:4860::8888"
 ```
 
-For Docker, see how [to enable ipv6](https://github.com/palw3ey/ye3ipsec/blob/main/doc/howtos.md#-enable-ipv6-in-docker)
+For Docker, see how [to enable ipv6](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/howtos.md#-enable-ipv6-in-docker)
 ```bash
 # Docker command
 
@@ -76,7 +76,7 @@ docker network create --ipv6 --subnet=10.2.192.0/23 --subnet=fd00::a02:c000/119 
 
 ---
 
-[tip] You can avoid step 1) and 2) if you have Let's Encrypt certificates. See [HOWTOs](https://github.com/palw3ey/ye3ipsec/blob/main/doc/howtos.md#-use-the-host-lets-encrypt-certificate-to-identify-the-vpn-server-instead-of-the-certificate-generated-by-the-container) 
+[tip] You can avoid step 1) and 2) if you have Let's Encrypt certificates. See [HOWTOs](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/howtos.md#-use-the-host-lets-encrypt-certificate-to-identify-the-vpn-server-instead-of-the-certificate-generated-by-the-container) 
 
 ---
 
@@ -135,19 +135,19 @@ The /etc/swanctl folder is persistent.
 
 Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, also add NET_RAW if you are using podman.  
 
-# [Prerequisite](https://github.com/palw3ey/ye3ipsec/blob/main/doc/prerequisite.md)
+# [Prerequisite](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/prerequisite.md)
 
-# [HOWTOs](https://github.com/palw3ey/ye3ipsec/blob/main/doc/howtos.md)
+# [HOWTOs](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/howtos.md)
 
-# [FAQ](https://github.com/palw3ey/ye3ipsec/blob/main/doc/faq.md)
+# [FAQ](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/faq.md)
 
-# [GNS3](https://github.com/palw3ey/ye3ipsec/blob/main/doc/gns3.md)
+# [GNS3](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/gns3.md)
 
-# [Environment Variables](https://github.com/palw3ey/ye3ipsec/blob/main/doc/environment_variables.md)
+# [Environment Variables](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/environment_variables.md)
 
-# [Compatibility](https://github.com/palw3ey/ye3ipsec/blob/main/doc/compatibility.md)
+# [Compatibility](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/compatibility.md)
 
-# [Build](https://github.com/palw3ey/ye3ipsec/blob/main/doc/build.md)
+# [Build](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/build.md)
 
 # strongSwan Links
 [strongSwan documentation](https://docs.strongswan.org/)
@@ -160,13 +160,13 @@ Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, al
 
 | name | version |
 | :- |:- |
-|ye3ipsec | 1.1.7 |
+|ye3ipsec-wan | 1.1.7 |
 |strongswan | 6.0.3 |
 |alpine | 3.22.1 |
 
-# [Changelog](https://github.com/palw3ey/ye3ipsec/blob/main/doc/changelog.md)
+# [Changelog](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/changelog.md)
 
-# [ToDo](https://github.com/palw3ey/ye3ipsec/blob/main/doc/todo.md)
+# [ToDo](https://github.com/palw3ey/ye3ipsec-wan/blob/main/doc/todo.md)
 
 Feel free to contribute or share your ideas for new features, you can contact me here on github or by email. I speak French, you can write to me in other languages ​​I will find ways to translate.
 
@@ -176,5 +176,5 @@ MIT
 author: palw3ey  
 maintainer: palw3ey  
 email: palw3ey@gmail.com  
-website: https://github.com/palw3ey/ye3ipsec  
-docker hub: https://hub.docker.com/r/palw3ey/ye3ipsec
+website: https://github.com/palw3ey/ye3ipsec-wan  
+docker hub: https://hub.docker.com/r/palw3ey/ye3ipsec-wan
