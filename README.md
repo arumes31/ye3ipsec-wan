@@ -2,15 +2,18 @@
 
 ![Build Status](https://github.com/arumes31/ye3ipsec-wan/actions/workflows/docker-image.yml/badge.svg)
 ![Security Scan](https://github.com/arumes31/ye3ipsec-wan/actions/workflows/security.yml/badge.svg)
-![Latest Version](https://img.shields.io/github/v/release/arumes31/ye3ipsec-wan?include_prereleases)
 ![License](https://img.shields.io/github/license/arumes31/ye3ipsec-wan)
 ![Docker Pulls](https://img.shields.io/docker/pulls/arumes31/ye3ipsec-wan)
 
-IPSec client and server based on Strongswan and Alpine. RA and S2S profile. GNS3 ready
+**Modernized IPSec Site-to-Site & Remote Access gateway based on strongSwan 6.0.6 and Alpine.**
+
+Support for multiple tunnels, nftables, and automatic WAN routing. Optimized for performance and security with high-security cipher suites by default.
+
+---
 
 > **Credits**: This project is a modernized fork of [palw3ey/ye3ipsec](https://github.com/palw3ey/ye3ipsec).
 
-This project offers a comprehensive set of features for creating IPSec VPN connections and is designed for both educational and practical applications, with default settings compatible with a wide range of devices such as Cisco IOS, Fortigate, built-in VPN clients (Windows, Android, iOS) and more.
+---
 
 # Simple usage
 
@@ -249,3 +252,6 @@ author: arumes31
 maintainer: arumes31  
 email: arumes31@users.noreply.github.com  
 website: https://github.com/arumes31/ye3ipsec-wan
+
+---
+**Tags**: `ipsec`, `vpn`, `strongswan`, `docker`, `nftables`, `cnsa`, `site-to-site`, `remote-access`, `security-scanning`
