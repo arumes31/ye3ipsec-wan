@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083
+# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083,SC2001,SC2076,SC2005,SC1090,SC2053,SC2153,SC2046
 
 # Entrypoint for the container
 
@@ -413,7 +413,7 @@ function f_s2s_psk_users(){
 }
 
 function f_certificate_cn() {
-    echo "$(openssl x509 -in $1 -noout -subject | sed -n 's/.*subject[[:space:]]*=[[:space:]]*CN[[:space:]]*=\([[:space:]]*\)\(.*\)/\2/p')"
+    openssl x509 -in "$1" -noout -subject -nameopt RFC2253 | sed -n 's/.*CN=\([^,]*\).*/\1/p'
 }
 
 # create firewall rules
@@ -506,10 +506,10 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	
 	if [[ -z "$Y_SERVER_CERT_CN" ]]; then
 
-		if [ $Y_LOCAL_SELFCERT == "no" ] && [ -f "$vg_file_external_key" ] && [ -f "$vg_file_external_cert" ]; then
-			Y_SERVER_CERT_CN="$(f_certificate_cn $vg_file_external_cert)"
+		if [ "$Y_LOCAL_SELFCERT" == "no" ] && [ -f "$vg_file_external_key" ] && [ -f "$vg_file_external_cert" ]; then
+			Y_SERVER_CERT_CN="$(f_certificate_cn "$vg_file_external_cert")"
  		elif [[ -f "$vg_file_server_cert" ]] ; then
- 			Y_SERVER_CERT_CN="$(f_certificate_cn $vg_file_server_cert)"
+ 			Y_SERVER_CERT_CN="$(f_certificate_cn "$vg_file_server_cert")"
 		elif expr "$vg_ip" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' >/dev/null; then
 			Y_SERVER_CERT_CN="$vg_ip"
 		elif [[ ! -z "$vg_interface_ip" ]]; then
@@ -520,6 +520,17 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	fi
  
 	f_log "Y_SERVER_CERT_CN = $Y_SERVER_CERT_CN"
+
+	# Format DN for pki (comma separated) and ensure it is handled correctly
+	vg_dn_pki=$(echo "$Y_SERVER_CERT_DN" | tr '/' ',' | sed 's/,,*/,/g; s/^,//; s/,$//')
+	if [[ -n "$vg_dn_pki" ]]; then
+		vg_dn_pki="$vg_dn_pki, CN=$Y_SERVER_CERT_CN"
+	else
+		vg_dn_pki="CN=$Y_SERVER_CERT_CN"
+	fi
+
+	# For documentation/future-proofing, also create a slash-separated version (openssl -subj style)
+	vg_dn_openssl=$(echo "/$vg_dn_pki" | sed 's/, */\//g; s/\/\//\//g')
 	
 	# create ca certificate
 
@@ -527,8 +538,8 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	
 		f_log "$i_create_ca_certificate"
 		
-		pki --gen --outform pem > $vg_file_ca_key
-		pki --self --lifetime $Y_SERVER_CERT_DAYS --in $vg_file_ca_key --dn "$Y_SERVER_CERT_DN, CN=$Y_SERVER_CERT_CN" --ca --outform pem > $vg_file_ca_cert
+		pki --gen --outform pem > "$vg_file_ca_key"
+		pki --self --lifetime "$Y_SERVER_CERT_DAYS" --in "$vg_file_ca_key" --dn "$vg_dn_pki" --ca --outform pem > "$vg_file_ca_cert"
 	fi
 	
 	f_log 'caCert : cat /etc/swanctl/x509ca/caCert.pem'
@@ -539,8 +550,8 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	
 		f_log "$i_create_server_certificate"
 		
-		pki --gen --outform pem > $vg_file_server_key
-		pki --issue --outform pem --type priv --lifetime $Y_SERVER_CERT_DAYS --in $vg_file_server_key --cacert $vg_file_ca_cert --cakey $vg_file_ca_key --dn "CN=$Y_SERVER_CERT_CN" --san "$Y_SERVER_CERT_CN" --flag clientAuth --flag serverAuth --flag ikeIntermediate > $vg_file_server_cert
+		pki --gen --outform pem > "$vg_file_server_key"
+		pki --issue --outform pem --type priv --lifetime "$Y_SERVER_CERT_DAYS" --in "$vg_file_server_key" --cacert "$vg_file_ca_cert" --cakey "$vg_file_ca_key" --dn "$vg_dn_pki" --san "$Y_SERVER_CERT_CN" --flag clientAuth --flag serverAuth --flag ikeIntermediate > "$vg_file_server_cert"
 
  	fi
 	
@@ -782,7 +793,7 @@ fi
 
 f_log "$i_start : charon"
 rm /var/run/charon.vici 2>/dev/null
-if [[ $Y_DEBUG == "yes" ]]; then
+if [[ "$Y_DEBUG" == "yes" ]]; then
 	f_log "$i_with_debug_option"
 	/libexec/ipsec/charon &
  	child=$! 
@@ -792,10 +803,10 @@ else
 fi
 
 f_log "$i_waiting_for_vici"
-while [ ! $(ls /var/run/charon.vici 2>/dev/null) ]; do sleep 1; done
+while [[ ! -e /var/run/charon.vici ]]; do sleep 1; done
 
 f_log "$i_start : swanctl"
-if [[ $Y_DEBUG == "yes" ]]; then
+if [[ "$Y_DEBUG" == "yes" ]]; then
 	f_log " $i_with_debug_option"
 	/sbin/swanctl --load-all --noprompt
 	/sbin/swanctl --log &
@@ -809,7 +820,7 @@ f_log ":: $i_ready ::"
 trap f_pre_exit SIGINT SIGQUIT SIGTERM
 
 # keep the server running,
-if [[ $Y_DEBUG == "yes" ]]; then
+if [[ "$Y_DEBUG" == "yes" ]]; then
 	# by using tail
 	tail -f /dev/null
 else

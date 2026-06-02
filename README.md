@@ -66,7 +66,7 @@ podman network create --ipv6 --subnet=10.2.192.0/23 --subnet=fd00::a02:c000/119 
  -e Y_FIREWALL_NAT=no --network=mynet46 --ip 10.2.192.254 --ip6 fd00::a02:c0fe -e Y_POOL_IPV4=10.2.193.0/24 -e Y_POOL_IPV6=fd00::a02:c100/120 -e Y_POOL_DNS4="1.1.1.1, 8.8.8.8" -e Y_POOL_DNS6="2606:4700:4700::1111, 2001:4860:4860::8888"
 ```
 
-For Docker, see how [to enable ipv6](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/howtos.md#-enable-ipv6-in-docker)
+For Docker, see how [to enable ipv6](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/howtos.md#-enable-ipv6-in-docker)
 ```bash
 # Docker command
 
@@ -84,7 +84,7 @@ docker network create --ipv6 --subnet=10.2.192.0/23 --subnet=fd00::a02:c000/119 
 
 ---
 
-[tip] You can avoid step 1) and 2) if you have Let's Encrypt certificates. See [HOWTOs](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/howtos.md#-use-the-host-lets-encrypt-certificate-to-identify-the-vpn-server-instead-of-the-certificate-generated-by-the-container) 
+[tip] You can avoid step 1) and 2) if you have Let's Encrypt certificates. See [HOWTOs](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/howtos.md#-use-the-host-lets-encrypt-certificate-to-identify-the-vpn-server-instead-of-the-certificate-generated-by-the-container) 
 
 ---
 
@@ -207,19 +207,19 @@ The /etc/swanctl folder is persistent.
 
 Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, also add NET_RAW if you are using podman.  
 
-# [Prerequisite](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/prerequisite.md)
+# [Prerequisite](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/prerequisite.md)
 
-# [HOWTOs](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/howtos.md)
+# [HOWTOs](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/howtos.md)
 
-# [FAQ](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/faq.md)
+# [FAQ](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/faq.md)
 
-# [GNS3](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/gns3.md)
+# [GNS3](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/gns3.md)
 
-# [Environment Variables](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/environment_variables.md)
+# [Environment Variables](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/environment_variables.md)
 
-# [Compatibility](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/compatibility.md)
+# [Compatibility](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/compatibility.md)
 
-# [Build](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/build.md)
+# [Build](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/build.md)
 
 # strongSwan Links
 [strongSwan documentation](https://docs.strongswan.org/)
@@ -236,9 +236,9 @@ Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, al
 |strongswan | 6.0.6 |
 |alpine | 3.21 |
 
-# [Changelog](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/changelog.md)
+# [Changelog](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/changelog.md)
 
-# [ToDo](https://github.com/arumes31/ye3ipsec-wan/blob/main/doc/todo.md)
+# [ToDo](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/todo.md)
 
 Feel free to contribute or share your ideas for new features, you can contact me here on github or by email. I speak French, you can write to me in other languages ​​I will find ways to translate.
 

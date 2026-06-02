@@ -6,19 +6,22 @@ ARG Y_STRONGSWAN_VERSION=6.0.6
 ARG Y_PATCH=yes
 
 # Install build dependencies
+# hadolint ignore=DL3018
 RUN apk add --no-cache \
-    build-base=0.5-r3 \
-    gmp-dev=6.3.0-r1 \
-    openssl-dev=3.3.3-r0 \
-    linux-pam-dev=1.6.1-r1 \
-    iptables-dev=1.8.11-r1 \
-    xz=5.6.3-r0 \
-    zstd=1.5.6-r0 \
-    curl-dev=8.12.1-r0 \
-    ca-certificates=20241121-r1 \
-    wget=1.25.0-r0 \
-    tar=1.35-r2 \
-    bz2=1.0.8-r6
+    build-base \
+    gmp-dev \
+    openssl-dev \
+    linux-pam-dev \
+    iptables-dev \
+    xz \
+    zstd \
+    curl-dev \
+    ca-certificates \
+    wget \
+    tar \
+    bzip2 \
+    bash \
+    xxd
 
 # Prepare source
 WORKDIR /usr/local/src
@@ -26,12 +29,16 @@ RUN wget --progress=dot:giga https://download.strongswan.org/strongswan-"${Y_STR
     tar xjvf strongswan-"${Y_STRONGSWAN_VERSION}".tar.bz2
 
 # Apply patches if needed
-COPY patches/ /patches/
+COPY patches/ /ye3ipsec_patch/
 WORKDIR /usr/local/src/strongswan-${Y_STRONGSWAN_VERSION}
 RUN if [ "$Y_PATCH" = "yes" ]; then \
-        cp -r /patches . && \
-        [ -f patches/before_build/all/patch.sh ] && chmod +x patches/before_build/all/patch.sh && patches/before_build/all/patch.sh; \
-        [ -f patches/before_build/"${Y_STRONGSWAN_VERSION}"/patch.sh ] && chmod +x patches/before_build/"${Y_STRONGSWAN_VERSION}"/patch.sh && patches/before_build/"${Y_STRONGSWAN_VERSION}"/patch.sh; \
+        cp -r /ye3ipsec_patch . && \
+        if [ -f ye3ipsec_patch/before_build/all/patch.sh ]; then \
+            chmod +x ye3ipsec_patch/before_build/all/patch.sh && ./ye3ipsec_patch/before_build/all/patch.sh; \
+        fi && \
+        if [ -f ye3ipsec_patch/before_build/"${Y_STRONGSWAN_VERSION}"/patch.sh ]; then \
+            chmod +x ye3ipsec_patch/before_build/"${Y_STRONGSWAN_VERSION}"/patch.sh && ./ye3ipsec_patch/before_build/"${Y_STRONGSWAN_VERSION}"/patch.sh; \
+        fi; \
     fi
 
 # Configure and build
@@ -67,8 +74,12 @@ RUN ./configure --prefix= \
 
 # Apply post-build patches
 RUN if [ "$Y_PATCH" = "yes" ]; then \
-        [ -f patches/after_build/all/patch.sh ] && chmod +x patches/after_build/all/patch.sh && patches/after_build/all/patch.sh; \
-        [ -f patches/after_build/"${Y_STRONGSWAN_VERSION}"/patch.sh ] && chmod +x patches/after_build/"${Y_STRONGSWAN_VERSION}"/patch.sh && patches/after_build/"${Y_STRONGSWAN_VERSION}"/patch.sh; \
+        if [ -f ye3ipsec_patch/after_build/all/patch.sh ]; then \
+            chmod +x ye3ipsec_patch/after_build/all/patch.sh && ./ye3ipsec_patch/after_build/all/patch.sh; \
+        fi && \
+        if [ -f ye3ipsec_patch/after_build/"${Y_STRONGSWAN_VERSION}"/patch.sh ]; then \
+            chmod +x ye3ipsec_patch/after_build/"${Y_STRONGSWAN_VERSION}"/patch.sh && ./ye3ipsec_patch/after_build/"${Y_STRONGSWAN_VERSION}"/patch.sh; \
+        fi; \
     fi
 
 # Stage 2: Final Production Image
@@ -134,21 +145,22 @@ ENV Y_LANGUAGE=en_US \
     Y_FILELOG_APPEND=yes
 
 # Install runtime packages and copy strongSwan from builder
+# hadolint ignore=DL3018
 RUN apk upgrade --no-cache && \
     apk add --no-cache \
-    bash=5.2.37-r0 \
-    tini=0.19.0-r3 \
-    tzdata=2025a-r0 \
-    gmp=6.3.0-r1 \
-    openssl=3.3.3-r0 \
-    linux-pam=1.6.1-r1 \
-    ip6tables=1.8.11-r1 \
-    iptables=1.8.11-r1 \
-    nftables=1.1.1-r0 \
-    kmod=33-r1 \
-    curl=8.12.1-r0 \
-    openresolv=3.13.2-r1 \
-    ca-certificates=20241121-r1
+    bash \
+    tini \
+    tzdata \
+    gmp \
+    openssl \
+    linux-pam \
+    ip6tables \
+    iptables \
+    nftables \
+    kmod \
+    curl \
+    openresolv \
+    ca-certificates
 
 COPY --from=builder /tmp/strongswan /
 

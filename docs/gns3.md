@@ -93,10 +93,10 @@ ip route 192.168.1.0 255.255.255.0 192.168.2.2
 do copy running-config startup-config
 ```
 
-## Configure ye3ipsec, static IP address
-Right click on your ye3ipsec device > Edi config, copy paste :
+## Configure ye3ipsec-wan, static IP address
+Right click on your ye3ipsec-wan device > Edi config, copy paste :
 
-- ye3ipsec-A
+- ye3ipsec-wan-A
 ```bash
 auto eth0
 iface eth0 inet static
@@ -105,7 +105,7 @@ iface eth0 inet static
 	gateway 192.168.1.1
 	up echo nameserver 192.168.1.1 > /etc/resolv.conf
 ```
-- ye3ipsec-B
+- ye3ipsec-wan-B
 ```bash
 auto eth0
 iface eth0 inet static
@@ -115,10 +115,10 @@ iface eth0 inet static
 	up echo nameserver 192.168.2.1 > /etc/resolv.conf
 ```
 
-## Configure ye3ipsec, environment variables
-Right click on your ye3ipsec device > Configure > General settings > Environment variables, copy paste :
+## Configure ye3ipsec-wan, environment variables
+Right click on your ye3ipsec-wan device > Configure > General settings > Environment variables, copy paste :
 
-- ye3ipsec-A
+- ye3ipsec-wan-A
 ```bash
 Y_S2S_PSK_ENABLE=yes
 Y_S2S_PSK_REMOTE_ADDRS=10.0.2.1
@@ -129,7 +129,7 @@ Y_S2S_PSK_LOCAL_TS=192.168.1.0/24
 Y_S2S_PSK_REMOTE_TS=192.168.2.0/24
 ```
 
-- ye3ipsec-B
+- ye3ipsec-wan-B
 ```bash
 Y_S2S_PSK_ENABLE=yes
 Y_S2S_PSK_REMOTE_ADDRS=10.0.1.1
@@ -140,22 +140,22 @@ Y_S2S_PSK_LOCAL_TS=192.168.2.0/24
 Y_S2S_PSK_REMOTE_TS=192.168.1.0/24
 ```
 
-## Start the ye3ipsec devices
-Right click on the ye3ipsec devices > Start
+## Start the ye3ipsec-wan devices
+Right click on the ye3ipsec-wan devices > Start
 
 ## Verify
 
-- ye3ipsec-B  
-Right click on ye3ipsec-B device > Auxiliary console
+- ye3ipsec-wan-B  
+Right click on ye3ipsec-wan-B device > Auxiliary console
 ```bash
 # to show log
 swanctl --log
 ```
 
-- ye3ipsec-A  
-Right click on ye3ipsec-A device > Auxiliary console
+- ye3ipsec-wan-A  
+Right click on ye3ipsec-wan-A device > Auxiliary console
 ```bash
-# ping ye3ipsec-B
+# ping ye3ipsec-wan-B
 ping 192.168.2.2
 
 # show active connection

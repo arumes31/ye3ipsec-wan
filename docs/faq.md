@@ -1,12 +1,12 @@
 # FAQ
-- How can i run strongswan without the configurations files provided by ye3ipsec ?
+- How can i run strongswan without the configurations files provided by ye3ipsec-wan ?
 ---
 ```bash
 docker run -dt --cap-add NET_ADMIN -e Y_IGNORE_CONFIG=yes --name myipsec arumes31/ye3ipsec-wan
 ```
 `Y_IGNORE_CONFIG=yes`, This way you only have strongswan without any custom configurations. You can find examples on the strongswan website on how to create connections.  
 
-If you are not comfortable, use `Y_IGNORE_CONFIG=no`, then use the environment variables which will automatically configure Strongswan with ready-made connection profiles. This is the purpose of the ye3ipsec container.
+If you are not comfortable, use `Y_IGNORE_CONFIG=no`, then use the environment variables which will automatically configure Strongswan with ready-made connection profiles. This is the purpose of the ye3ipsec-wan container.
 
 ---
 - With docker environment variables I can only create 1 site to site PSK profile, how do I add another site to site connection ?
@@ -141,7 +141,7 @@ sudo swanctl --initiate --ike conn-s2s_psk_siteY
 ```
 
 ---
-- How do i update my running container to the latest ye3ipsec image without losing my container data ?
+- How do i update my running container to the latest ye3ipsec-wan image without losing my container data ?
 ---  
 The folder /etc/swanctl is persistent, and won't be deleted by a `docker rm`. You can find its path on the host using this command :
 ```bash

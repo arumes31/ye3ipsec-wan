@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083
+# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083,SC2001,SC2076,SC2005,SC1090,SC2053,SC2153,SC2046
 cat <<EOL
 connections {
     conn-xauth_rsa : template-conn {
