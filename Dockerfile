@@ -1,5 +1,5 @@
 # Stage 1: Build strongSwan
-FROM alpine:3.21.3 AS builder
+FROM alpine:3.23.4 AS builder
 
 # Build arguments for strongSwan version and patches
 ARG Y_STRONGSWAN_VERSION=6.0.6
@@ -83,7 +83,7 @@ RUN if [ "$Y_PATCH" = "yes" ]; then \
     fi
 
 # Stage 2: Final Production Image
-FROM alpine:3.21.3
+FROM alpine:3.23.4
 
 LABEL org.opencontainers.image.title="ye3ipsec-wan"
 LABEL org.opencontainers.image.version="1.1.7"
