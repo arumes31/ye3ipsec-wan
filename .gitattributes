@@ -1,0 +1,15 @@
+# Git attributes
+* text=auto eol=lf
+
+*.sh text eol=lf
+Dockerfile* text eol=lf
+entrypoint.sh text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.gns3a text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary

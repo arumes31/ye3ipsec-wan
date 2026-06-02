@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083
 
 function f_replace(){
 	

@@ -1,6 +1,8 @@
-# localisation file for ye3ipsec
+#!/bin/bash
+# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083
+# localization file for ye3ipsec-wan
 # website : https://github.com/arumes31/ye3ipsec-wan
-# language : en_GB
+# language : en_US
 # translation by : arumes31 <arumes31@users.noreply.github.com>
 # create : 20231227
 # update : 20231227

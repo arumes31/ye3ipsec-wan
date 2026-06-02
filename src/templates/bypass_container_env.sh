@@ -1,11 +1,13 @@
+#!/bin/bash
+# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083
 
 ## These values will override container env variables, and used by entrypoint.sh on every restart. To activate and customize the configurations wanted, remove one or more # sign.
 
-#export Y_LANGUAGE=fr_FR
+#export Y_LANGUAGE=en_US
 #export Y_DEBUG=no
 #export Y_IGNORE_CONFIG=no
-#export Y_STRONGSWAN_VERSION=6.0.0
-#export Y_EXTRA_PACKAGE="net-tools traceroute tcpdump ipcalc nano"
+#export Y_STRONGSWAN_VERSION=6.0.6
+#export Y_EXTRA_PACKAGE="net-tools traceroute tcpdump ipcalc nano nftables"
 #export Y_URL_IP_CHECK=http://whatismyip.akamai.com
 #export Y_URL_IP_CHECK_TIMEOUT=5
 #export Y_PATCH=yes

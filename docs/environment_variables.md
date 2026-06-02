@@ -3,11 +3,11 @@ These are the env variables and their default values.
 
 | variables | format | default | description |
 | :- |:- |:- |:- |
-|Y_LANGUAGE | text | fr_FR | Language. The list is in the folder /i18n |
+|Y_LANGUAGE | text | en_US | Language. The list is in the folder /i18n |
 |Y_DEBUG | yes/no | no | yes, to show charon messages |
 |Y_IGNORE_CONFIG | yes/no | no | yes, to not apply file changes in the /etc/swanctl folder. A good option if you use a custom /etc/swanctl folder mounted from outside |
-|Y_STRONGSWAN_VERSION | text | 5.9.14 | strongswan's version to download when building image |
-|Y_EXTRA_PACKAGE | text | "net-tools traceroute tcpdump ipcalc nano" | additional package to install in the image |
+|Y_STRONGSWAN_VERSION | text | 6.0.6 | strongswan's version to download when building image |
+|Y_EXTRA_PACKAGE | text | "net-tools traceroute tcpdump ipcalc nano nftables" | additional package to install in the image |
 |Y_URL_IP_CHECK | url | http://whatismyip.akamai.com | Url that curl will use to retrieve the public IP |
 |Y_URL_IP_CHECK_TIMEOUT | integer | 5 | this is the -m option in curl : Maximum time allowed, in second |
 |Y_PATCH | yes/no | yes | yes, to apply fixes before and/or after strongswan build |

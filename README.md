@@ -24,7 +24,7 @@ podman run -dt \
   --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /lib/modules:/lib/modules:ro \
   -p 500:500/udp -p 4500:4500/udp -e Y_FIREWALL_ENABLE=yes \
   -e Y_EAP_USERS="tux1:StrongPassword1 tux2:StrongPassword2" \
-  --name myipsec docker.io/arumes31/ye3ipsec-wan
+  --name myipsec ghcr.io/arumes31/ye3ipsec-wan
 ```
 ```bash
 # Docker command
@@ -33,7 +33,7 @@ docker run -dt \
   --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /lib/modules:/lib/modules:ro \
   -p 500:500/udp -p 4500:4500/udp -e Y_FIREWALL_ENABLE=yes \
   -e Y_EAP_USERS="tux1:StrongPassword1 tux2:StrongPassword2" \
-  --name myipsec docker.io/arumes31/ye3ipsec-wan
+  --name myipsec ghcr.io/arumes31/ye3ipsec-wan
 ```
 ```bash
 # to auto-generate 10 random EAP users, add : -e Y_EAP_USERS_RANDOM=10
@@ -248,5 +248,4 @@ MIT
 author: arumes31  
 maintainer: arumes31  
 email: arumes31@users.noreply.github.com  
-website: https://github.com/arumes31/ye3ipsec-wan  
-docker hub: https://hub.docker.com/r/arumes31/ye3ipsec-wan
+website: https://github.com/arumes31/ye3ipsec-wan

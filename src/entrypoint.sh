@@ -1,10 +1,11 @@
-#!/bin/sh
+#!/bin/bash
+# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083
 
 # Entrypoint for the container
 
 # change timezone
-cp /usr/share/zoneinfo/$TZ /etc/localtime
-echo $TZ > /etc/timezone
+cp "/usr/share/zoneinfo/$TZ" /etc/localtime
+echo "$TZ" > /etc/timezone
 
 # ============ [ global variable ] ============
 
@@ -25,7 +26,7 @@ if [[ -f $vg_dir_swanctl/ye3ipsec-wan/bypass_container_env.sh ]] ; then
 fi
 
 # default language
-vg_default_language="fr_FR"
+vg_default_language="en_US"
 
 # script name
 vg_name=ye3ipsec-wan
@@ -35,7 +36,7 @@ vg_interface=$(route | awk '/^default/{print $NF}')
 vg_interface_ip=$(ip addr show dev $vg_interface | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
 
 # get external ip
-vg_ip=$(curl -m $Y_URL_IP_CHECK_TIMEOUT -s $Y_URL_IP_CHECK)
+vg_ip=$(curl -m "$Y_URL_IP_CHECK_TIMEOUT" -s "$Y_URL_IP_CHECK")
 
 # credential directory, without ending slash
 vg_dir_credential=$vg_dir_swanctl/ye3ipsec-wan/credential
@@ -81,7 +82,7 @@ function f_log(){
 		vl_log="$(date '+%Y-%m-%d %H:%M:%S') $(hostname) $vg_name:"
 	fi
 
-	echo -e "$vl_log $@"
+	echo -e "$vl_log $*"
 }
 
 # create random credential

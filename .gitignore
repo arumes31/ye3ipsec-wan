@@ -1,0 +1,29 @@
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+*.key
+*.pem
+*.p12
+
+# Local dev
+.cache/
+act/
+.shellcheckrc
+
+# Swanctl generated
+swanctl/conf.d/*.conf
+swanctl/x509ca/*.pem
+swanctl/x509/*.pem
+swanctl/x509pkcs12/*.p12
+
+# VS Code
+.vscode/
+
+# GitHub Actions local testing
+.act/

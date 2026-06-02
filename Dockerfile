@@ -1,5 +1,5 @@
 # Stage 1: Build strongSwan
-FROM alpine:latest AS builder
+FROM alpine:3.21.3 AS builder
 
 # Build arguments for strongSwan version and patches
 ARG Y_STRONGSWAN_VERSION=6.0.6
@@ -7,31 +7,31 @@ ARG Y_PATCH=yes
 
 # Install build dependencies
 RUN apk add --no-cache \
-    build-base \
-    gmp-dev \
-    openssl-dev \
-    linux-pam-dev \
-    iptables-dev \
-    xz \
-    zstd \
-    curl-dev \
-    ca-certificates \
-    wget \
-    tar \
-    bz2
+    build-base=0.5-r3 \
+    gmp-dev=6.3.0-r1 \
+    openssl-dev=3.3.3-r0 \
+    linux-pam-dev=1.6.1-r1 \
+    iptables-dev=1.8.11-r1 \
+    xz=5.6.3-r0 \
+    zstd=1.5.6-r0 \
+    curl-dev=8.12.1-r0 \
+    ca-certificates=20241121-r1 \
+    wget=1.25.0-r0 \
+    tar=1.35-r2 \
+    bz2=1.0.8-r6
 
 # Prepare source
 WORKDIR /usr/local/src
-RUN wget https://download.strongswan.org/strongswan-${Y_STRONGSWAN_VERSION}.tar.bz2 && \
-    tar xjvf strongswan-${Y_STRONGSWAN_VERSION}.tar.bz2
+RUN wget --progress=dot:giga https://download.strongswan.org/strongswan-"${Y_STRONGSWAN_VERSION}".tar.bz2 && \
+    tar xjvf strongswan-"${Y_STRONGSWAN_VERSION}".tar.bz2
 
 # Apply patches if needed
-COPY ye3ipsec_patch/ /ye3ipsec_patch/
+COPY patches/ /patches/
 WORKDIR /usr/local/src/strongswan-${Y_STRONGSWAN_VERSION}
 RUN if [ "$Y_PATCH" = "yes" ]; then \
-        cp -r /ye3ipsec_patch . && \
-        [ -f ye3ipsec_patch/before_build/all/patch.sh ] && chmod +x ye3ipsec_patch/before_build/all/patch.sh && ye3ipsec_patch/before_build/all/patch.sh; \
-        [ -f ye3ipsec_patch/before_build/${Y_STRONGSWAN_VERSION}/patch.sh ] && chmod +x ye3ipsec_patch/before_build/${Y_STRONGSWAN_VERSION}/patch.sh && ye3ipsec_patch/before_build/${Y_STRONGSWAN_VERSION}/patch.sh; \
+        cp -r /patches . && \
+        [ -f patches/before_build/all/patch.sh ] && chmod +x patches/before_build/all/patch.sh && patches/before_build/all/patch.sh; \
+        [ -f patches/before_build/"${Y_STRONGSWAN_VERSION}"/patch.sh ] && chmod +x patches/before_build/"${Y_STRONGSWAN_VERSION}"/patch.sh && patches/before_build/"${Y_STRONGSWAN_VERSION}"/patch.sh; \
     fi
 
 # Configure and build
@@ -62,17 +62,17 @@ RUN ./configure --prefix= \
     --enable-bypass-lan \
     --enable-curl && \
     NB_CORES=$(grep -c '^processor' /proc/cpuinfo) && \
-    make -j$((NB_CORES+1)) -l${NB_CORES} && \
+    make -j"$((NB_CORES+1))" -l"${NB_CORES}" && \
     make install DESTDIR=/tmp/strongswan
 
 # Apply post-build patches
 RUN if [ "$Y_PATCH" = "yes" ]; then \
-        [ -f ye3ipsec_patch/after_build/all/patch.sh ] && chmod +x ye3ipsec_patch/after_build/all/patch.sh && ye3ipsec_patch/after_build/all/patch.sh; \
-        [ -f ye3ipsec_patch/after_build/${Y_STRONGSWAN_VERSION}/patch.sh ] && chmod +x ye3ipsec_patch/after_build/${Y_STRONGSWAN_VERSION}/patch.sh && ye3ipsec_patch/after_build/${Y_STRONGSWAN_VERSION}/patch.sh; \
+        [ -f patches/after_build/all/patch.sh ] && chmod +x patches/after_build/all/patch.sh && patches/after_build/all/patch.sh; \
+        [ -f patches/after_build/"${Y_STRONGSWAN_VERSION}"/patch.sh ] && chmod +x patches/after_build/"${Y_STRONGSWAN_VERSION}"/patch.sh && patches/after_build/"${Y_STRONGSWAN_VERSION}"/patch.sh; \
     fi
 
 # Stage 2: Final Production Image
-FROM alpine:latest
+FROM alpine:3.21.3
 
 LABEL org.opencontainers.image.title="ye3ipsec-wan"
 LABEL org.opencontainers.image.version="1.1.7"
@@ -80,7 +80,7 @@ LABEL org.opencontainers.image.description="IPSec client and server based on Str
 LABEL org.opencontainers.image.authors="arumes31"
 
 # Runtime Environment Variables
-ENV Y_LANGUAGE=fr_FR \
+ENV Y_LANGUAGE=en_US \
     Y_DEBUG=no \
     Y_IGNORE_CONFIG=no \
     Y_EXTRA_PACKAGE="net-tools traceroute tcpdump ipcalc nano nftables" \
@@ -136,26 +136,26 @@ ENV Y_LANGUAGE=fr_FR \
 # Install runtime packages and copy strongSwan from builder
 RUN apk upgrade --no-cache && \
     apk add --no-cache \
-    tini \
-    tzdata \
-    gmp \
-    openssl \
-    linux-pam \
-    ip6tables \
-    iptables \
-    nftables \
-    kmod \
-    curl \
-    openresolv \
-    ca-certificates \
-    $Y_EXTRA_PACKAGE
+    bash=5.2.37-r0 \
+    tini=0.19.0-r3 \
+    tzdata=2025a-r0 \
+    gmp=6.3.0-r1 \
+    openssl=3.3.3-r0 \
+    linux-pam=1.6.1-r1 \
+    ip6tables=1.8.11-r1 \
+    iptables=1.8.11-r1 \
+    nftables=1.1.1-r0 \
+    kmod=33-r1 \
+    curl=8.12.1-r0 \
+    openresolv=3.13.2-r1 \
+    ca-certificates=20241121-r1
 
 COPY --from=builder /tmp/strongswan /
 
 # Add project files
-ADD entrypoint.sh /
-ADD i18n/ /i18n/
-ADD swanctl/ /etc/swanctl/
+COPY src/entrypoint.sh /
+COPY src/i18n/ /i18n/
+COPY src/templates/ /etc/swanctl/ye3ipsec-wan/
 
 # Setup permissions and links
 RUN chmod +x /entrypoint.sh && \

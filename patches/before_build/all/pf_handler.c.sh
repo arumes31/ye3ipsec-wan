@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083
 
 # https://github.com/strongswan/strongswan/commit/f5b1ca4ef60bc4fca91f0d1e852ef8447d23c99a
 

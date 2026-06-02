@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: Dockerfile
 
@@ -28,7 +28,7 @@ jobs:
         uses: ludeeus/action-shellcheck@master
         with:
           scandir: '.'
-          ignore_paths: 'ye3ipsec_patch'
+          ignore_paths: 'patches'
 
   scan:
     name: Vulnerability Scan (Trivy)
