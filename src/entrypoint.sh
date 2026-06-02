@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083,SC2001,SC2076,SC2005,SC1090,SC2053,SC2153,SC2046
+# shellcheck disable=SC1091,SC2034,SC2148,SC1083,SC2001,SC2076,SC2005,SC1090,SC2053,SC2153,SC2046,SC2154
 
 # Entrypoint for the container
 
@@ -33,7 +33,7 @@ vg_name=ye3ipsec-wan
 
 # get default interface
 vg_interface=$(route | awk '/^default/{print $NF}')
-vg_interface_ip=$(ip addr show dev $vg_interface | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+vg_interface_ip=$(ip addr show dev "$vg_interface" | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
 
 # get external ip
 vg_ip=$(curl -m "$Y_URL_IP_CHECK_TIMEOUT" -s "$Y_URL_IP_CHECK")
@@ -103,7 +103,7 @@ function f_credential(){
 		
 		# verify if already exist
 		if [[ -f $vg_dir_credential/$vl_cred_var ]] && [[ $vl_persistent == "yes" ]] ; then
-			vl_result=$(cat $vg_dir_credential/$vl_cred_var)
+			vl_result=$(cat $vg_dir_credential/"$vl_cred_var")
 		else
 			# generate
 			if [[ $2 == "username" ]]; then
@@ -116,12 +116,12 @@ function f_credential(){
 			vl_result=$(tr -dc $vl_char </dev/urandom | head -c $vl_size; echo)
 			# make persistent
 			if [[ $vl_persistent == "yes" ]]; then
-				echo $vl_result > $vg_dir_credential/$vl_cred_var
+				echo "$vl_result" > $vg_dir_credential/"$vl_cred_var"
 			fi
 		fi
-		echo $vl_result
+		echo "$vl_result"
 	else
-		echo $vl_cred_value
+		echo "$vl_cred_value"
 	fi
 	
 }
@@ -154,25 +154,25 @@ function f_certificate(){
 	vl_file_client_cert="$vg_dir_swanctl/x509/clientCert${vl_file}.pem"
 	vl_file_client_p12="$vg_dir_swanctl/pkcs12/clientCert${vl_file}"
 	
-	pki --gen --outform pem > $vl_file_client_key
-	pki --issue --outform pem --type priv --lifetime $Y_CERT_DAYS --in $vl_file_client_key --cacert $vg_file_ca_cert --cakey $vg_file_ca_key --dn "CN=$vl_cn" --san $vl_cn --flag clientAuth > $vl_file_client_cert
+	pki --gen --outform pem > "$vl_file_client_key"
+	pki --issue --outform pem --type priv --lifetime "$Y_CERT_DAYS" --in "$vl_file_client_key" --cacert $vg_file_ca_cert --cakey $vg_file_ca_key --dn "CN=$vl_cn" --san "$vl_cn" --flag clientAuth > "$vl_file_client_cert"
 	
 	# export to p12
-	openssl pkcs12 -in $vl_file_client_cert -inkey $vl_file_client_key -certfile $vg_file_ca_cert -export -out $vl_file_client_p12.p12 -passout pass:$vl_password
+	openssl pkcs12 -in "$vl_file_client_cert" -inkey "$vl_file_client_key" -certfile $vg_file_ca_cert -export -out "$vl_file_client_p12".p12 -passout pass:"$vl_password"
 	
 	# export to p12 pem
-	openssl base64 -in $vl_file_client_p12.p12 -out $vl_file_client_p12.pem.p12
+	openssl base64 -in "$vl_file_client_p12".p12 -out "$vl_file_client_p12".pem.p12
 	
 	if [[ $Y_CERT_P12_EXTRA == "yes" ]]; then
 	
 		# export to p12 legacy
-		openssl pkcs12 -legacy -in $vl_file_client_cert -inkey $vl_file_client_key -certfile $vg_file_ca_cert -export -out $vl_file_client_p12.legacy.p12 -passout pass:$vl_password
+		openssl pkcs12 -legacy -in "$vl_file_client_cert" -inkey "$vl_file_client_key" -certfile $vg_file_ca_cert -export -out "$vl_file_client_p12".legacy.p12 -passout pass:"$vl_password"
 		
 		# export to p12 legacy no ca
-		openssl pkcs12 -legacy -in $vl_file_client_cert -inkey $vl_file_client_key -export -out $vl_file_client_p12.legacy.noca.p12 -passout pass:$vl_password
+		openssl pkcs12 -legacy -in "$vl_file_client_cert" -inkey "$vl_file_client_key" -export -out "$vl_file_client_p12".legacy.noca.p12 -passout pass:"$vl_password"
 
 		# export to p12 legacy pem
-		openssl base64 -in $vl_file_client_p12.legacy.p12 -out $vl_file_client_p12.legacy.pem.p12
+		openssl base64 -in "$vl_file_client_p12".legacy.p12 -out "$vl_file_client_p12".legacy.pem.p12
 	
 	fi
 }	
@@ -192,13 +192,13 @@ function f_eap_users(){
 			if [[ $vl_user == "$vg_users_separator"* ]]; then
 				vl_id=$(f_credential vl_id username no)
 			else
-				vl_id=$(echo $vl_user | sed "s/$vg_users_separator.*//")
+				vl_id=$(echo "$vl_user" | sed "s/$vg_users_separator.*//")
 			fi
 
 			if [[ $vl_user == *"$vg_users_separator" ]] || [[ ! $vl_user =~ "$vg_users_separator" ]]; then
 				vl_secret=$(f_credential vl_secret password no)
 			else
-				vl_secret=$(echo $vl_user | sed "s/[^$vg_users_separator]*$vg_users_separator//")
+				vl_secret=$(echo "$vl_user" | sed "s/[^$vg_users_separator]*$vg_users_separator//")
 			fi
 
 			echo -e "  eap-eap$vl_iteration { \n    id = $vl_id \n    secret = $vl_secret \n  }" >> $vg_dir_swanctl/conf.d/eap_users.conf
@@ -257,19 +257,19 @@ function f_psk_users(){
 			if [[ $vl_user == "$vg_users_separator"* ]]; then
 				vl_secret=$(f_credential vl_secret password no)
 			else
-				vl_secret=$(echo $vl_user | sed "s/$vg_users_separator.*//")
+				vl_secret=$(echo "$vl_user" | sed "s/$vg_users_separator.*//")
 			fi
 
-			vl_user_id=$(echo $vl_user | sed "s/[^$vg_users_separator]*$vg_users_separator//")
+			vl_user_id=$(echo "$vl_user" | sed "s/[^$vg_users_separator]*$vg_users_separator//")
 			if [[ $vl_user_id == "$vg_users_separator"* ]] || [[ -z $vl_user_id ]] || [[ ! $vl_user =~ "$vg_users_separator" ]]; then
 				vl_id0=$(f_credential vl_id0 username no)
 			else
-				vl_id0=$(echo $vl_user_id | sed "s/$vg_users_separator.*//")
+				vl_id0=$(echo "$vl_user_id" | sed "s/$vg_users_separator.*//")
 			fi
 			if [[ $vl_user_id == *"$vg_users_separator" ]] || [[ ! $vl_user_id =~ "$vg_users_separator" ]]; then
 				vl_id1=$(f_credential vl_id1 username no)
 			else
-				vl_id1=$(echo $vl_user_id | sed "s/[^$vg_users_separator]*$vg_users_separator//")
+				vl_id1=$(echo "$vl_user_id" | sed "s/[^$vg_users_separator]*$vg_users_separator//")
 			fi
 
 			echo -e "  ike-psk$vl_iteration { \n    secret = $vl_secret \n    id-0 = $vl_id0 \n    id-1 = $vl_id1 \n  }" >> $vg_dir_swanctl/conf.d/psk_users.conf
@@ -328,16 +328,16 @@ function f_cert_users(){
 			if [[ $vl_user == "$vg_users_separator"* ]]; then
 				vl_id=$(f_credential vl_id username no)
 			else
-				vl_id=$(echo $vl_user | sed "s/$vg_users_separator.*//")
+				vl_id=$(echo "$vl_user" | sed "s/$vg_users_separator.*//")
 			fi
 
 			if [[ $vl_user == *"$vg_users_separator" ]] || [[ ! $vl_user =~ "$vg_users_separator" ]]; then
 				vl_secret=$(f_credential vl_secret password no)
 			else
-				vl_secret=$(echo $vl_user | sed "s/[^$vg_users_separator]*$vg_users_separator//")
+				vl_secret=$(echo "$vl_user" | sed "s/[^$vg_users_separator]*$vg_users_separator//")
 			fi
 
-			f_certificate $vl_id $vl_secret "_$vl_id"
+			f_certificate "$vl_id" "$vl_secret" "_$vl_id"
 			
 			echo -e "# cat \"/etc/swanctl/pkcs12/clientCert_${vl_id}.pem.p12\" password: $vl_secret \n" >> $vg_dir_swanctl/conf.d/cert_users.txt
 			
@@ -362,7 +362,7 @@ function f_cert_users_random(){
 			vl_id=$(f_credential vl_id username no)
 			vl_secret=$(f_credential vl_secret password no)
 			
-			f_certificate $vl_id $vl_secret "_$vl_id"
+			f_certificate "$vl_id" "$vl_secret" "_$vl_id"
 			
 			echo -e "# cat \"/etc/swanctl/pkcs12/clientCert_${vl_id}.pem.p12\" password: $vl_secret \n" >> $vg_dir_swanctl/conf.d/cert_users_random.txt
 			
@@ -390,12 +390,12 @@ function f_s2s_psk_users(){
 			vl_iteration=$((vl_iteration+1))
 			
 			# format: secret:local_id:remote_id:local_ts:remote_ts:remote_addr
-			vl_secret=$(echo $vl_user | cut -d: -f1)
-			vl_local_id=$(echo $vl_user | cut -d: -f2)
-			vl_remote_id=$(echo $vl_user | cut -d: -f3)
-			vl_local_ts=$(echo $vl_user | cut -d: -f4)
-			vl_remote_ts=$(echo $vl_user | cut -d: -f5)
-			vl_remote_addr=$(echo $vl_user | cut -d: -f6)
+			vl_secret=$(echo "$vl_user" | cut -d: -f1)
+			vl_local_id=$(echo "$vl_user" | cut -d: -f2)
+			vl_remote_id=$(echo "$vl_user" | cut -d: -f3)
+			vl_local_ts=$(echo "$vl_user" | cut -d: -f4)
+			vl_remote_ts=$(echo "$vl_user" | cut -d: -f5)
+			vl_remote_addr=$(echo "$vl_user" | cut -d: -f6)
 
 			echo -e "  conn-s2s_psk_$vl_iteration : template-conn { \n    local_addrs = %any \n    remote_addrs = $vl_remote_addr \n    local : template-local { \n      auth = psk \n      id = $vl_local_id \n    } \n    remote { \n      auth = psk \n      id = $vl_remote_id \n    } \n    children { \n      child-s2s_psk_$vl_iteration : template-child { \n        local_ts = $vl_local_ts \n        remote_ts = $vl_remote_ts \n        start_action = trap \n      } \n    } \n  }" >> $vg_dir_swanctl/conf.d/s2s_psk_users.conf
 			echo -e "  ike-s2s_psk_$vl_iteration { \n    secret = $vl_secret \n    id-0 = $vl_local_id \n    id-1 = $vl_remote_id \n  }" >> $vg_dir_swanctl/conf.d/s2s_psk_secrets.conf
@@ -435,7 +435,7 @@ function f_pre_exit(){
 
 # ============ [ timestamp ] ============
 
-echo $vg_date
+echo "$vg_date"
 
 # ============ [ internationalisation ] ============
 
@@ -444,7 +444,7 @@ source /i18n/$vg_default_language.sh
 
 # override with choosen language
 if [[ $Y_LANGUAGE != $vg_default_language ]] && [[ -f /i18n/$Y_LANGUAGE.sh ]] ; then
-	source /i18n/$Y_LANGUAGE.sh
+	source /i18n/"$Y_LANGUAGE".sh
 fi
 
 f_log "i18n : $Y_LANGUAGE"
@@ -456,7 +456,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	f_log "$i_apply_configuration"
 
 	# filelog symlink
-	ln -sfn $Y_FILELOG_PATH /var/log/charon.log > /dev/null 2>&1
+	ln -sfn "$Y_FILELOG_PATH" /var/log/charon.log > /dev/null 2>&1
 
 	# update ca certificates
 	update-ca-certificates > /dev/null 2>&1
@@ -522,7 +522,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	f_log "Y_SERVER_CERT_CN = $Y_SERVER_CERT_CN"
 
 	# Format DN for pki (comma separated) and ensure it is handled correctly
-	vg_dn_pki=$(echo "$Y_SERVER_CERT_DN" | tr '/' ',' | sed 's/,,*/,/g; s/^,//; s/,$//')
+	vg_dn_pki=$(echo "${Y_SERVER_CERT_DN:-}" | tr '/' ',' | sed 's/,,*/,/g; s/^,//; s/,$//')
 	if [[ -n "$vg_dn_pki" ]]; then
 		vg_dn_pki="$vg_dn_pki, CN=$Y_SERVER_CERT_CN"
 	else
@@ -567,7 +567,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 
 	# activate firewall and generate template
 	
-	if [ $Y_CERT_ENABLE == "yes" ] || [ $Y_EAP_ENABLE == "yes" ] || [ $Y_PSK_ENABLE == "yes" ] || [ $Y_XAUTH_PSK_ENABLE == "yes" ] || [ $Y_XAUTH_RSA_ENABLE == "yes" ] || [ $Y_S2S_PSK_ENABLE == "yes" ] || [ $Y_S2S_RSA_ENABLE == "yes" ] ; then
+	if [ "$Y_CERT_ENABLE" == "yes" ] || [ "$Y_EAP_ENABLE" == "yes" ] || [ "$Y_PSK_ENABLE" == "yes" ] || [ "$Y_XAUTH_PSK_ENABLE" == "yes" ] || [ "$Y_XAUTH_RSA_ENABLE" == "yes" ] || [ "$Y_S2S_PSK_ENABLE" == "yes" ] || [ "$Y_S2S_RSA_ENABLE" == "yes" ] ; then
 
 		if [[ $Y_FIREWALL_ENABLE == "yes" ]]; then
 			f_log "$i_enable : $i_firewall"
@@ -577,11 +577,11 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			# Use nftables if available
 			if command -v nft >/dev/null 2>&1; then
 				f_log "Using nftables"
-				f_firewall_nft $Y_POOL_IPV4 $vg_interface
+				f_firewall_nft "$Y_POOL_IPV4" "$vg_interface"
 			fi
 
-			f_firewall iptables $Y_POOL_IPV4 $vg_interface
-			f_firewall ip6tables $Y_POOL_IPV6 $vg_interface
+			f_firewall iptables "$Y_POOL_IPV4" "$vg_interface"
+			f_firewall ip6tables "$Y_POOL_IPV6" "$vg_interface"
 		fi
 		
 		if [[ -z "$Y_LOCAL_ID" ]]; then
@@ -589,7 +589,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 		fi
 		f_log "Y_LOCAL_ID = $Y_LOCAL_ID"
 		
-		if [ $Y_LOCAL_SELFCERT == "no" ] && [ -f "$vg_file_external_key" ] && [ -f "$vg_file_external_cert" ]; then
+		if [ "$Y_LOCAL_SELFCERT" == "no" ] && [ -f "$vg_file_external_key" ] && [ -f "$vg_file_external_cert" ]; then
 			f_log "$i_use : cert.pem"
 			vg_local_cert=cert.pem
 		else
@@ -640,9 +640,9 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			fi
    		fi
 	else
-		mv -f $vg_dir_swanctl/conf.d/cert.conf $vg_dir_swanctl/conf.d/cert-$vg_date.dis 2>/dev/null
-		mv -f $vg_dir_swanctl/conf.d/cert_users.txt $vg_dir_swanctl/conf.d/cert_users-$vg_date.dis 2>/dev/null
-		mv -f $vg_dir_swanctl/conf.d/cert_users_random.txt $vg_dir_swanctl/conf.d/cert_users_random-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/cert.conf $vg_dir_swanctl/conf.d/cert-"$vg_date".dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/cert_users.txt $vg_dir_swanctl/conf.d/cert_users-"$vg_date".dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/cert_users_random.txt $vg_dir_swanctl/conf.d/cert_users_random-"$vg_date".dis 2>/dev/null
 	fi
 
 	if [[ $Y_EAP_ENABLE == "yes" ]]; then
@@ -665,9 +665,9 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			fi
    		fi
 	else
-		mv -f $vg_dir_swanctl/conf.d/eap.conf $vg_dir_swanctl/conf.d/eap-$vg_date.dis 2>/dev/null
-		mv -f $vg_dir_swanctl/conf.d/eap_users.conf $vg_dir_swanctl/conf.d/eap_users-$vg_date.dis 2>/dev/null
-		mv -f $vg_dir_swanctl/conf.d/eap_users_random.conf $vg_dir_swanctl/conf.d/eap_users_random-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/eap.conf $vg_dir_swanctl/conf.d/eap-"$vg_date".dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/eap_users.conf $vg_dir_swanctl/conf.d/eap_users-"$vg_date".dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/eap_users_random.conf $vg_dir_swanctl/conf.d/eap_users_random-"$vg_date".dis 2>/dev/null
 	fi
 
 	if [[ $Y_PSK_ENABLE == "yes" ]]; then
@@ -691,9 +691,9 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			fi
    		fi
 	else
-		mv -f $vg_dir_swanctl/conf.d/psk.conf $vg_dir_swanctl/conf.d/psk-$vg_date.dis 2>/dev/null
-		mv -f $vg_dir_swanctl/conf.d/psk_users.conf $vg_dir_swanctl/conf.d/psk_users-$vg_date.dis 2>/dev/null
-		mv -f $vg_dir_swanctl/conf.d/psk_users_random.conf $vg_dir_swanctl/conf.d/psk_users_random-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/psk.conf $vg_dir_swanctl/conf.d/psk-"$vg_date".dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/psk_users.conf $vg_dir_swanctl/conf.d/psk_users-"$vg_date".dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/psk_users_random.conf $vg_dir_swanctl/conf.d/psk_users_random-"$vg_date".dis 2>/dev/null
 	fi
 	
 	if [[ $Y_XAUTH_PSK_ENABLE == "yes" ]]; then
@@ -707,7 +707,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			f_show_cred Y_XAUTH_PSK_PASSWORD
    		fi
 	else
-		mv -f $vg_dir_swanctl/conf.d/xauth_psk.conf $vg_dir_swanctl/conf.d/xauth_psk-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/xauth_psk.conf $vg_dir_swanctl/conf.d/xauth_psk-"$vg_date".dis 2>/dev/null
 	fi
 	
 	if [[ $Y_XAUTH_RSA_ENABLE == "yes" ]]; then
@@ -721,7 +721,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			f_show_cred Y_XAUTH_RSA_PASSWORD
    		fi
 	else
-		mv -f $vg_dir_swanctl/conf.d/xauth_rsa.conf $vg_dir_swanctl/conf.d/xauth_rsa-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/xauth_rsa.conf $vg_dir_swanctl/conf.d/xauth_rsa-"$vg_date".dis 2>/dev/null
 	fi
 	
 	if [[ $Y_S2S_PSK_ENABLE == "yes" ]]; then
@@ -739,9 +739,9 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			fi
 		fi
 	else
-		mv -f $vg_dir_swanctl/conf.d/s2s_psk.conf $vg_dir_swanctl/conf.d/s2s_psk-$vg_date.dis 2>/dev/null
-		mv -f $vg_dir_swanctl/conf.d/s2s_psk_users.conf $vg_dir_swanctl/conf.d/s2s_psk_users-$vg_date.dis 2>/dev/null
-		mv -f $vg_dir_swanctl/conf.d/s2s_psk_secrets.conf $vg_dir_swanctl/conf.d/s2s_psk_secrets-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/s2s_psk.conf $vg_dir_swanctl/conf.d/s2s_psk-"$vg_date".dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/s2s_psk_users.conf $vg_dir_swanctl/conf.d/s2s_psk_users-"$vg_date".dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/s2s_psk_secrets.conf $vg_dir_swanctl/conf.d/s2s_psk_secrets-"$vg_date".dis 2>/dev/null
 	fi
 	
 	if [[ $Y_S2S_RSA_ENABLE == "yes" ]]; then
@@ -759,7 +759,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			f_show_cred Y_S2S_RSA_REMOTE_CERTS
    		fi
 	else
-		mv -f $vg_dir_swanctl/conf.d/s2s_rsa.conf $vg_dir_swanctl/conf.d/s2s_rsa-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/s2s_rsa.conf $vg_dir_swanctl/conf.d/s2s_rsa-"$vg_date".dis 2>/dev/null
 	fi
 
  	if [[ $Y_CLIENT_ENABLE == "yes" ]]; then
@@ -780,7 +780,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	    		f_show_cred Y_CLIENT_PKCS12_SECRET
       		fi
 	else
-		mv -f $vg_dir_swanctl/conf.d/client.conf $vg_dir_swanctl/conf.d/client-$vg_date.dis 2>/dev/null
+		mv -f $vg_dir_swanctl/conf.d/client.conf $vg_dir_swanctl/conf.d/client-"$vg_date".dis 2>/dev/null
 	fi
 	
 else

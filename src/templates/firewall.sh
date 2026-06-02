@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2154,SC1091,SC2034,SC2148,SC2086,SC1083,SC2001,SC2076,SC2005,SC1090,SC2053,SC2153,SC2046
+# shellcheck disable=SC1091,SC2034,SC2148,SC1083,SC2001,SC2076,SC2005,SC1090,SC2053,SC2153,SC2046
 
 function f_firewall_delete_all () {
 
@@ -44,12 +44,11 @@ function f_firewall_nft() {
     # NAT/Masquerade
     if [[ $Y_FIREWALL_NAT == "yes" ]]; then
         # Pool NAT
-        nft add rule inet ye3ipsec-wan postrouting ip saddr "$1" oifname "$2" masquerade
+        nft add rule inet ye3ipsec-wan postrouting ip saddr "$1" oifname "$2" meta ipsec exists masquerade
         # S2S NAT
         if [[ $Y_FIREWALL_S2S_NAT == "yes" ]]; then
-            # (Simplification: loop would be needed for multiple subnets)
             for sub in $(echo "$Y_S2S_PSK_REMOTE_TS" | tr ',' ' '); do
-                [[ $sub != *:* ]] && nft add rule inet ye3ipsec-wan postrouting ip saddr "$sub" oifname "$2" masquerade
+                [[ $sub != *:* ]] && nft add rule inet ye3ipsec-wan postrouting ip saddr "$sub" oifname "$2" meta ipsec exists masquerade
             done
         fi
     fi
