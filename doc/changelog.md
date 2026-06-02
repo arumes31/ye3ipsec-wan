@@ -1,4 +1,7 @@
 # Changelog
+## [1.1.7] - 2026-06-02
+### Added
+- automatic allow routing and NAT from S2S remote subnets to Internet when firewall is enabled
 ## [1.1.6] - 2025-11-11
 ### Changed
 - new version : strongSwan 6.0.3

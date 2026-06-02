@@ -2,7 +2,7 @@ FROM alpine:latest
 
 LABEL org.opencontainers.image.title="ye3ipsec"
 
-LABEL org.opencontainers.image.version="1.1.6"
+LABEL org.opencontainers.image.version="1.1.7"
 LABEL org.opencontainers.image.created="2025-11-11T15:00:00-03:00"
 LABEL org.opencontainers.image.revision="20251111"
 LABEL org.opencontainers.image.base.name="ghcr.io/palw3ey/ye3ipsec:1.1.6"
