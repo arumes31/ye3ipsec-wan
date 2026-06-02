@@ -118,6 +118,70 @@ Set-VPNConnection -Name "EAP Test" -SplitTunneling $True
 ```
 
 
+---
+
+# Remote Site Configuration Examples
+
+To connect a 3rd party device to **ye3ipsec-wan**, use the following configuration snippets. These match the default security proposals (CNSA compliant).
+
+## FortiGate (CLI)
+```bash
+config vpn ipsec phase1-interface
+    edit "To-IPSec-WAN"
+        set interface "wan1"
+        set ike-version 2
+        set peertype any
+        set net-device disable
+        set proposal aes256gcm-prfsha384
+        set dhgrp 20
+        set remote-gw <DOCKER_PUBLIC_IP>
+        set psksecret <YOUR_SECRET>
+    next
+end
+
+config vpn ipsec phase2-interface
+    edit "To-IPSec-WAN-P2"
+        set phase1name "To-IPSec-WAN"
+        set proposal aes256gcm
+        set dhgrp 20
+        set src-subnet <LOCAL_LAN>
+        set dst-subnet 0.0.0.0 0.0.0.0
+    next
+end
+```
+
+## Cisco IOS (IKEv2)
+```plaintext
+crypto ikev2 proposal YE3-PROPOSAL
+ encryption aes-gcm-256
+ prf sha384
+ group 20
+ 
+crypto ikev2 policy YE3-POLICY
+ match address local <REMOTE_SITE_WAN_IP>
+ proposal YE3-PROPOSAL
+
+crypto ikev2 profile YE3-PROFILE
+ match identity remote address <DOCKER_PUBLIC_IP> 255.255.255.255
+ identity local address <REMOTE_SITE_WAN_IP>
+ authentication local pre-share password <YOUR_SECRET>
+ authentication remote pre-share password <YOUR_SECRET>
+ 
+crypto ipsec transform-set YE3-TS esp-gcm 256
+ mode tunnel
+
+crypto ipsec profile YE3-IPSEC-PROFILE
+ set transform-set YE3-TS
+ set ikev2-profile YE3-PROFILE
+
+interface Tunnel1
+ ip address <TUNNEL_IP> 255.255.255.252
+ tunnel source <WAN_INTERFACE>
+ tunnel destination <DOCKER_PUBLIC_IP>
+ tunnel mode ipsec ipv4
+ tunnel protection ipsec profile YE3-IPSEC-PROFILE
+```
+
 ## Features
 - Road warrior IKEv2 client profile : RSA (pkcs12 file), PSK and EAP
 - Road warrior IKEv2 server profile : RSA, PSK and EAP
