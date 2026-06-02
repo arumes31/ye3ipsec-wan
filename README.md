@@ -1,6 +1,7 @@
 # ye3ipsec-wan
 
 ![Build Status](https://github.com/arumes31/ye3ipsec-wan/actions/workflows/docker-image.yml/badge.svg)
+![Security Scan](https://github.com/arumes31/ye3ipsec-wan/actions/workflows/security.yml/badge.svg)
 ![Latest Version](https://img.shields.io/github/v/release/arumes31/ye3ipsec-wan?include_prereleases)
 ![License](https://img.shields.io/github/license/arumes31/ye3ipsec-wan)
 ![Docker Pulls](https://img.shields.io/docker/pulls/arumes31/ye3ipsec-wan)
