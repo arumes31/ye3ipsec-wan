@@ -1,5 +1,10 @@
 # ye3ipsec-wan
 
+![Build Status](https://github.com/arumes31/ye3ipsec-wan/actions/workflows/docker-image.yml/badge.svg)
+![Latest Version](https://img.shields.io/github/v/release/arumes31/ye3ipsec-wan?include_prereleases)
+![License](https://img.shields.io/github/license/arumes31/ye3ipsec-wan)
+![Docker Pulls](https://img.shields.io/docker/pulls/arumes31/ye3ipsec-wan)
+
 IPSec client and server based on Strongswan and Alpine. RA and S2S profile. GNS3 ready
 
 > **Credits**: This project is a modernized fork of [palw3ey/ye3ipsec](https://github.com/palw3ey/ye3ipsec).

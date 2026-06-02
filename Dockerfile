@@ -1,5 +1,5 @@
 # Stage 1: Build strongSwan
-FROM alpine:3.21 AS builder
+FROM alpine:latest AS builder
 
 # Build arguments for strongSwan version and patches
 ARG Y_STRONGSWAN_VERSION=6.0.6
@@ -72,7 +72,7 @@ RUN if [ "$Y_PATCH" = "yes" ]; then \
     fi
 
 # Stage 2: Final Production Image
-FROM alpine:3.21
+FROM alpine:latest
 
 LABEL org.opencontainers.image.title="ye3ipsec-wan"
 LABEL org.opencontainers.image.version="1.1.7"
@@ -96,8 +96,8 @@ ENV Y_LANGUAGE=fr_FR \
     Y_PORT_NAT=4500 \
     Y_SERVER_CERT_DN="C=FR, ST=Ile-de-France, L=Paris, O=IPSec, OU=Example" \
     Y_SERVER_CERT_DAYS=3650 \
-    Y_PROPOSALS_PHASE1="aes256gcm16-prfsha384-ecp384, aes256-sha256-ecp256, aes256-sha256-modp2048" \
-    Y_PROPOSALS_PHASE2="aes256gcm16-ecp384, aes256-sha256" \
+    Y_PROPOSALS_PHASE1="aes256gcm16-prfsha384-ecp384, aes256-sha384-ecp384, aes256-sha256-ecp256, aes256-sha256-modp2048" \
+    Y_PROPOSALS_PHASE2="aes256gcm16-ecp384, aes256-sha384, aes256-sha256" \
     Y_REKEY_PHASE1=86400s \
     Y_REKEY_PHASE2=28800s \
     Y_DPD_DELAY=15s \
@@ -134,7 +134,8 @@ ENV Y_LANGUAGE=fr_FR \
     Y_FILELOG_APPEND=yes
 
 # Install runtime packages and copy strongSwan from builder
-RUN apk add --no-cache \
+RUN apk upgrade --no-cache && \
+    apk add --no-cache \
     tini \
     tzdata \
     gmp \
