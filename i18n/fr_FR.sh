@@ -1,7 +1,7 @@
 # localisation file for ye3ipsec
-# website : https://github.com/palw3ey/ye3ipsec
+# website : https://github.com/arumes31/ye3ipsec-wan
 # language : fr_FR
-# translation by : palw3ey <palw3ey@gmail.com>
+# translation by : arumes31 <arumes31@users.noreply.github.com>
 # create : 20231227
 # update : 20231227
 

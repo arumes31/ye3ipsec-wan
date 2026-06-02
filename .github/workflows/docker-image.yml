@@ -1,12 +1,19 @@
 name: ci
 
 on:
+  push:
+    branches:
+      - main
+      - v2_test
   workflow_dispatch:
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -17,15 +24,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ vars.Y_GITHUB_USERNAME }}
-          password: ${{ secrets.Y_GITHUB_PASSWORD }}
-
-      - name: Login to Quay Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: quay.io
-          username: ${{ vars.Y_QUAY_USERNAME }}
-          password: ${{ secrets.Y_QUAY_PASSWORD }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -36,14 +36,13 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
+          context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            palw3ey/ye3ipsec:latest
-            palw3ey/ye3ipsec:1.1.6
-            ghcr.io/palw3ey/ye3ipsec:latest
-            ghcr.io/palw3ey/ye3ipsec:1.1.6
-            quay.io/palw3ey/ye3ipsec:latest
-            quay.io/palw3ey/ye3ipsec:1.1.6
+            ${{ vars.Y_DOCKER_USERNAME }}/ye3ipsec-wan:latest
+            ${{ vars.Y_DOCKER_USERNAME }}/ye3ipsec-wan:1.1.7
+            ghcr.io/${{ github.repository_owner }}/ye3ipsec-wan:latest
+            ghcr.io/${{ github.repository_owner }}/ye3ipsec-wan:1.1.7
           cache-from: type=gha
           cache-to: type=gha,mode=max

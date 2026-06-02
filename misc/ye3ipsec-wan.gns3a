@@ -1,0 +1,19 @@
+{
+    "name": "ye3ipsec-wan",
+    "category": "guest",
+    "description": "IPSec client and server based on Strongswan and Alpine. RA and S2S profile. Modernized for WAN access.",
+    "vendor_name": "arumes31",
+    "vendor_url": "https://github.com/arumes31/ye3ipsec-wan",
+    "product_name": "ye3ipsec-wan",
+    "registry_version": 4,
+    "status": "stable",
+    "maintainer": "arumes31",
+    "maintainer_email": "arumes31@users.noreply.github.com",
+    "usage": "The directory /etc/swanctl is persistent. Useful env :\nY_S2S_PSK_USERS=\"secret:localId:remoteId:localTS:remoteTS:peer\"\n\nDocumentation : https://github.com/arumes31/ye3ipsec-wan",
+    "symbol": "router.svg",
+    "docker": {
+        "adapters": 1,
+        "image": "arumes31/ye3ipsec-wan",
+        "console_type": "telnet"
+    }
+}

@@ -2,7 +2,7 @@
 - How can i run strongswan without the configurations files provided by ye3ipsec ?
 ---
 ```bash
-docker run -dt --cap-add NET_ADMIN -e Y_IGNORE_CONFIG=yes --name myipsec palw3ey/ye3ipsec
+docker run -dt --cap-add NET_ADMIN -e Y_IGNORE_CONFIG=yes --name myipsec arumes31/ye3ipsec-wan
 ```
 `Y_IGNORE_CONFIG=yes`, This way you only have strongswan without any custom configurations. You can find examples on the strongswan website on how to create connections.  
 
@@ -153,7 +153,7 @@ Now you can stop and delete the container. Update the image.
 docker stop myipsec && docker rm myipsec
 
 # Update the image
-docker pull palw3ey/ye3ipsec
+docker pull arumes31/ye3ipsec-wan
 ```
 
 You have 2 methods to mount the folder to your new container : use bind or volume.  

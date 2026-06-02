@@ -3,7 +3,7 @@
 To customize and create your own images.
 
 ```bash
-git clone https://github.com/palw3ey/ye3ipsec.git
+git clone https://github.com/arumes31/ye3ipsec-wan.git
 cd ye3ipsec
 # Make all your modifications, then :
 podman build --no-cache --network=host -t ye3ipsec .
