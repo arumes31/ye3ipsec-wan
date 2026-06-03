@@ -43,12 +43,12 @@ function f_firewall_nft() {
 
     # NAT/Masquerade
     if [[ $Y_FIREWALL_NAT == "yes" ]]; then
-        # Pool NAT
-        nft add rule inet ye3ipsec-wan postrouting ip saddr "$1" oifname "$2" meta ipsec exists masquerade
+        # Pool NAT - masquerade VPN client traffic going out the interface
+        nft add rule inet ye3ipsec-wan postrouting ip saddr "$1" oifname "$2" masquerade
         # S2S NAT
         if [[ $Y_FIREWALL_S2S_NAT == "yes" ]]; then
             for sub in $(echo "$Y_S2S_PSK_REMOTE_TS" | tr ',' ' '); do
-                [[ $sub != *:* ]] && nft add rule inet ye3ipsec-wan postrouting ip saddr "$sub" oifname "$2" meta ipsec exists masquerade
+                [[ $sub != *:* ]] && nft add rule inet ye3ipsec-wan postrouting ip saddr "$sub" oifname "$2" masquerade
             done
         fi
     fi

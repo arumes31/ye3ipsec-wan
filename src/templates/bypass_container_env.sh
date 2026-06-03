@@ -165,7 +165,7 @@
 
 ## dhcp plugin
 #export Y_DHCP_FORCE_SERVER_ADDRESS=no
-#export Y_DCHP_IDENTITY_LEASE=no
+#export Y_DHCP_IDENTITY_LEASE=no
 #export Y_DHCP_SERVER=255.255.255.255
 
 ## other plugin

@@ -1,4 +1,14 @@
 # Changelog
+## [1.1.8] - 2026-06-03
+### Fixed
+- Fixed `f_pre_exit` being called twice on container shutdown (added re-entry guard)
+- Fixed env variable typo `Y_DCHP_IDENTITY_LEASE` → `Y_DHCP_IDENTITY_LEASE` in bypass_container_env.sh and strongswan.sh
+- Added missing Dockerfile ENV defaults for strongswan.conf variables (revocation, radius, dhcp, cert, eap, xauth, s2s, client)
+- Fixed nftables masquerade rule using incorrect `meta ipsec exists` (inverted logic vs iptables equivalent)
+- Moved SIGTERM/SIGINT/SIGQUIT trap earlier in entrypoint.sh to catch signals during config generation
+- Fixed debug mode using `tail -f /dev/null` instead of `wait "$child"` (container now exits properly when charon crashes)
+### Validated
+- Confirmed musl libc patches (pf_handler.c, farp_spoofer.c) are still required for strongSwan 6.0.6
 ## [1.1.7] - 2026-06-02
 ### Added
 - Project renamed to **ye3ipsec-wan**

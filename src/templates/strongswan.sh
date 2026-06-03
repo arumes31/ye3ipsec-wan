@@ -63,7 +63,7 @@ charon {
 		
 		dhcp {
 			force_server_address = $Y_DHCP_FORCE_SERVER_ADDRESS
-			identity_lease = $Y_DCHP_IDENTITY_LEASE
+			identity_lease = $Y_DHCP_IDENTITY_LEASE
 			server = $Y_DHCP_SERVER
 		}
 		farp {

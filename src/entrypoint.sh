@@ -422,7 +422,10 @@ if [[ -f $vg_file_firewall ]] ; then
 fi
 
 # to do before container exit
+vg_exited=false
 function f_pre_exit(){
+	if [[ "$vg_exited" == "true" ]]; then return; fi
+	vg_exited=true
 	f_log "$i_exiting_in_progress"
 	if [[ $Y_IGNORE_CONFIG == "no" ]] && [[ $Y_FIREWALL_ENABLE == "yes" ]]; then
 		f_log "$i_remove : $i_ipv4_firewall_rules"
@@ -432,6 +435,9 @@ function f_pre_exit(){
 	fi
  	kill -TERM "$child" 2>/dev/null
 }
+
+# catch SIGTERM early so signals during config generation are handled
+trap f_pre_exit SIGINT SIGQUIT SIGTERM
 
 # ============ [ timestamp ] ============
 
@@ -816,17 +822,8 @@ fi
 
 f_log ":: $i_ready ::"
 
-# catch SIGTERM
-trap f_pre_exit SIGINT SIGQUIT SIGTERM
-
-# keep the server running,
-if [[ "$Y_DEBUG" == "yes" ]]; then
-	# by using tail
-	tail -f /dev/null
-else
-	# by waiting child process 
-	wait "$child"
-fi
+# keep the server running by waiting child process
+wait "$child"
 
 # before final exit
 f_pre_exit
