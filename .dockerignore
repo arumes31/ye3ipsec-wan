@@ -1,0 +1,15 @@
+.git
+.github
+.cache
+.act
+.vscode
+docs
+misc
+tests
+.env
+*.key
+*.pem
+*.p12
+README.md
+LICENSE
+patch.diff

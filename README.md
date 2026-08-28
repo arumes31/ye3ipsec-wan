@@ -23,8 +23,8 @@ Create a remote access connection with EAP (mschapv2) authentication :
 # Podman rootless command
 podman run -dt \
   --runtime=/usr/bin/crun --network=pasta \
-  --cap-add=NET_ADMIN,SYS_MODULE,SYS_ADMIN,NET_RAW \
-  --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /lib/modules:/lib/modules:ro \
+  --cap-drop=ALL --cap-add=NET_ADMIN --cap-add=NET_RAW \
+  --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 \
   -p 500:500/udp -p 4500:4500/udp -e Y_FIREWALL_ENABLE=yes \
   -e Y_EAP_USERS="tux1:StrongPassword1 tux2:StrongPassword2" \
   --name myipsec ghcr.io/arumes31/ye3ipsec-wan
@@ -32,8 +32,8 @@ podman run -dt \
 ```bash
 # Docker command
 docker run -dt \
-  --cap-add=NET_ADMIN --cap-add=SYS_MODULE --cap-add=SYS_ADMIN \
-  --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /lib/modules:/lib/modules:ro \
+  --cap-drop=ALL --cap-add=NET_ADMIN --cap-add=NET_RAW \
+  --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 \
   -p 500:500/udp -p 4500:4500/udp -e Y_FIREWALL_ENABLE=yes \
   -e Y_EAP_USERS="tux1:StrongPassword1 tux2:StrongPassword2" \
   --name myipsec ghcr.io/arumes31/ye3ipsec-wan
@@ -43,8 +43,13 @@ docker run -dt \
 # to auto-generate 30 random RSA certificate users, add : -e Y_CERT_USERS_RANDOM=30
 # to auto-generate 50 random PSK users, add : -e Y_PSK_USERS_RANDOM=50
 
-# to see the logs and credentials : run this below command (replace docker by podman if you use podman)
+# Runtime logs never contain raw credentials.
 docker logs myipsec
+
+# List protected generated credential files. Explicitly read only the value you
+# need from an interactive terminal; do not pipe it into logs or CI output.
+docker exec myipsec find /etc/swanctl/ye3ipsec-wan/credential -maxdepth 1 -type f -printf '%f\n'
+docker exec -it myipsec sh -c 'cat /etc/swanctl/ye3ipsec-wan/credential/Y_EAP_PASSWORD'
 
 # to see Strongswan logs (press these 2 keys to exit logs viewing : Ctrl C)
 docker exec -it myipsec swanctl --log
@@ -204,11 +209,17 @@ The credentials are randomly generated, if not set.
 
 The container will generate self signed certificate using external (public) ip address as CN, if not set.  
 
-The container configurations and credentials can be displayed using the command : docker logs containerName  
+Runtime logs redact credentials. Generated values are stored with mode `0600` under
+`/etc/swanctl/ye3ipsec-wan/credential`; multi-user secrets remain in protected
+files under `/etc/swanctl/conf.d`. Retrieve only the required file through an
+interactive `docker exec`/`podman exec` session. Rotate credentials that were
+previously retained by Docker, Podman, systemd, or centralized log storage.
 
 The /etc/swanctl folder is persistent.  
 
-Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, also add NET_RAW if you are using podman.  
+Important, you need at least `--cap-add NET_ADMIN` for strongSwan to start. The
+examples drop every other capability and add `NET_RAW` for compatible Docker and
+rootless Podman operation. Do not grant `SYS_ADMIN` or `SYS_MODULE`.
 
 # [Prerequisite](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/prerequisite.md)
 

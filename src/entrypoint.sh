@@ -3,6 +3,9 @@
 
 # Entrypoint for the container
 
+# Configuration files contain private keys and authentication secrets.
+umask 077
+
 # change timezone
 cp "/usr/share/zoneinfo/$TZ" /etc/localtime
 echo "$TZ" > /etc/timezone
@@ -36,13 +39,17 @@ vg_interface=$(route | awk '/^default/{print $NF}')
 vg_interface_ip=$(ip addr show dev "$vg_interface" | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
 
 # get external ip
-vg_ip=$(curl -m "$Y_URL_IP_CHECK_TIMEOUT" -s "$Y_URL_IP_CHECK")
+vg_ip=$(curl --fail --silent --show-error --max-time "$Y_URL_IP_CHECK_TIMEOUT" "$Y_URL_IP_CHECK" || true)
+if [[ -n $vg_ip && ! $vg_ip =~ ^[0-9A-Fa-f:.]+$ ]]; then
+	printf 'external IP service returned an invalid address\n' >&2
+	vg_ip=
+fi
 
 # credential directory, without ending slash
 vg_dir_credential=$vg_dir_swanctl/ye3ipsec-wan/credential
-if [[ ! -d $vg_dir_credential ]]; then
-    mkdir $vg_dir_credential
-fi
+mkdir -p "$vg_dir_credential"
+chmod 700 "$vg_dir_credential"
+find "$vg_dir_credential" -type f -exec chmod 600 {} +
 
 # id and password parameters
 vg_users_separator=":"
@@ -85,57 +92,8 @@ function f_log(){
 	echo -e "$vl_log $*"
 }
 
-# create random credential
-function f_credential(){
-	
-	vl_cred_var=$1
-	vl_cred_value=$(eval "echo \$$vl_cred_var")
-	
-	if [[ -z $3 ]]; then
-		vl_persistent="yes"
-	else
-		vl_persistent=$3
-	fi
-	
-	# if env credentials not exist : generate and make persistent to survive a container restart
-	
-	if [[ -z $vl_cred_value ]] ; then
-		
-		# verify if already exist
-		if [[ -f $vg_dir_credential/$vl_cred_var ]] && [[ $vl_persistent == "yes" ]] ; then
-			vl_result=$(cat $vg_dir_credential/"$vl_cred_var")
-		else
-			# generate
-			if [[ $2 == "username" ]]; then
-				vl_char=$vg_username_char
-				vl_size=$vg_username_length
-			else
-				vl_char=$vg_password_char
-				vl_size=$vg_password_length
-			fi
-			vl_result=$(tr -dc $vl_char </dev/urandom | head -c $vl_size; echo)
-			# make persistent
-			if [[ $vl_persistent == "yes" ]]; then
-				echo "$vl_result" > $vg_dir_credential/"$vl_cred_var"
-			fi
-		fi
-		echo "$vl_result"
-	else
-		echo "$vl_cred_value"
-	fi
-	
-}
-
-# show client credential in log
-function f_show_cred(){
-
-	vl_cred_var=$1
-	vl_cred_value=$(eval "echo \$$vl_cred_var")
-
-	if [[ ! -z "$vl_cred_value" ]]; then
-		f_log "    CRED_$vl_cred_var : $vl_cred_value"
-	fi
-}
+# shellcheck source=credential-utils.sh
+source /usr/local/lib/ye3ipsec/credential-utils.sh
 
 # create random client certificate
 function f_certificate(){
@@ -631,12 +589,12 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			f_show_cred Y_SERVER_CERT_CN
 			f_show_cred Y_CERT_CN
 			f_show_cred Y_CERT_PASSWORD
-			f_log '    CRED_Y_CERT_ : cat "/etc/swanctl/pkcs12/clientCert.pem.p12"'
+			f_show_credential_file Y_CERT "$vg_file_client_p12.pem.p12"
 			if [[ -f $vg_dir_swanctl/conf.d/cert_users.txt ]]; then
-				f_log "    CRED_Y_CERT_USERS : $(cat $vg_dir_swanctl/conf.d/cert_users.txt | grep '# cat ' | tr '\n' ' ' | tr -s ' ')"
+				f_show_credential_file Y_CERT_USERS "$vg_dir_swanctl/conf.d/cert_users.txt"
 			fi
 			if [[ -f $vg_dir_swanctl/conf.d/cert_users_random.txt ]]; then
-				f_log "    CRED_Y_CERT_USERS_RANDOM : $(cat $vg_dir_swanctl/conf.d/cert_users_random.txt | grep '# cat ' | tr '\n' ' ' | tr -s ' ')"
+				f_show_credential_file Y_CERT_USERS_RANDOM "$vg_dir_swanctl/conf.d/cert_users_random.txt"
 			fi
    		fi
 	else
@@ -658,10 +616,10 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			f_show_cred Y_EAP_USERNAME
 			f_show_cred Y_EAP_PASSWORD
 			if [[ -f $vg_dir_swanctl/conf.d/eap_users.conf ]]; then
-				f_log "    CRED_Y_EAP_USERS : $(cat $vg_dir_swanctl/conf.d/eap_users.conf | tr '\n' ' ' | tr -s ' ')"
+				f_show_credential_file Y_EAP_USERS "$vg_dir_swanctl/conf.d/eap_users.conf"
 			fi
 			if [[ -f $vg_dir_swanctl/conf.d/eap_users_random.conf ]]; then
-				f_log "    CRED_Y_EAP_USERS_RANDOM : $(cat $vg_dir_swanctl/conf.d/eap_users_random.conf | tr '\n' ' ' | tr -s ' ')"
+				f_show_credential_file Y_EAP_USERS_RANDOM "$vg_dir_swanctl/conf.d/eap_users_random.conf"
 			fi
    		fi
 	else
@@ -684,10 +642,10 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			f_show_cred Y_PSK_LOCAL_ID
 			f_show_cred Y_PSK_REMOTE_ID
 			if [[ -f $vg_dir_swanctl/conf.d/psk_users.conf ]]; then
-				f_log "    CRED_Y_PSK_USERS : $(cat $vg_dir_swanctl/conf.d/psk_users.conf | tr '\n' ' ' | tr -s ' ')"
+				f_show_credential_file Y_PSK_USERS "$vg_dir_swanctl/conf.d/psk_users.conf"
 			fi
 			if [[ -f $vg_dir_swanctl/conf.d/psk_users_random.conf ]]; then
-				f_log "    CRED_Y_PSK_USERS_RANDOM : $(cat $vg_dir_swanctl/conf.d/psk_users_random.conf | tr '\n' ' ' | tr -s ' ')"
+				f_show_credential_file Y_PSK_USERS_RANDOM "$vg_dir_swanctl/conf.d/psk_users_random.conf"
 			fi
    		fi
 	else
@@ -735,7 +693,7 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 			f_show_cred Y_S2S_PSK_REMOTE_ID
 			f_show_cred Y_S2S_PSK_SECRET
 			if [[ -f $vg_dir_swanctl/conf.d/s2s_psk_users.conf ]]; then
-				f_log "    CRED_Y_S2S_PSK_USERS : $(cat $vg_dir_swanctl/conf.d/s2s_psk_users.conf | tr '\n' ' ' | tr -s ' ')"
+				f_show_credential_file Y_S2S_PSK_USERS "$vg_dir_swanctl/conf.d/s2s_psk_secrets.conf"
 			fi
 		fi
 	else
@@ -790,6 +748,10 @@ else
 fi
 
 # ============ [ start service ] ============
+
+# Protect generated and pre-existing secret material before strongSwan reads it.
+find "$vg_dir_swanctl/conf.d" -type f -exec chmod 600 {} + 2>/dev/null || true
+find "$vg_dir_swanctl/private" -type f -exec chmod 600 {} + 2>/dev/null || true
 
 f_log "$i_start : charon"
 rm /var/run/charon.vici 2>/dev/null
