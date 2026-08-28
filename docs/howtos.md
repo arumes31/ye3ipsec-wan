@@ -28,7 +28,7 @@ docker network create --ipv6 \
 ## ¤ Use mynet46, and customise the network settings to be able to use the VPN from outside  
   Use these options with docker run :
 ```bash
---cap-add NET_ADMIN --cap-add SYS_MODULE --cap-add SYS_ADMIN \  
+--cap-drop ALL --cap-add NET_ADMIN --cap-add NET_RAW \
   --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 \
   -v /lib/modules:/lib/modules:ro -e Y_FIREWALL_ENABLE=yes \
   -p 500:500/udp -p 4500:4500/udp \  
@@ -66,7 +66,7 @@ letsencrypt_folder=/etc/letsencrypt/live/www.test.lan
 sudo cp $letsencrypt_folder/chain.pem $myipsec_volume/x509ca/chain.pem
 sudo cp $letsencrypt_folder/cert.pem $myipsec_volume/x509/cert.pem
 sudo cp $letsencrypt_folder/privkey.pem $myipsec_volume/private/privkey.pem
-sudo chmod 644 $myipsec_volume/private/privkey.pem
+sudo chmod 600 $myipsec_volume/private/privkey.pem
 sudo chown $USER $myipsec_volume/private/privkey.pem
 
 # now you can restart the container with :
@@ -139,10 +139,20 @@ podman exec -it myipsec swanctl --load-all --noprompt
   -e Y_XAUTH_PSK_USERNAME=carol -e Y_XAUTH_PSK_PASSWORD=StrongPassword
 ```
 
-## ¤ Show credentials
+## ¤ Retrieve generated credentials securely
+
+Runtime logs intentionally redact credentials. List the protected generated
+credential files, then read only the value you need from an interactive terminal.
+Multi-user EAP/PSK values are stored in mode `0600` configuration files under
+`/etc/swanctl/conf.d`.
+
 ```bash
-docker logs myipsec | grep "CRED_"
+docker exec myipsec find /etc/swanctl/ye3ipsec-wan/credential -maxdepth 1 -type f -printf '%f\n'
+docker exec -it myipsec sh -c 'cat /etc/swanctl/ye3ipsec-wan/credential/Y_EAP_PASSWORD'
 ```
+
+Do not pipe credential output into Docker logs, CI logs, chat, or monitoring. If
+an earlier image logged these values, rotate them after reviewing retained logs.
 
 ## ¤ Show CA
 ```bash

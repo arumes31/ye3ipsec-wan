@@ -1,8 +1,12 @@
+# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+
 # Stage 1: Build strongSwan
-FROM alpine:3.21.3 AS builder
+FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS builder
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 # Build arguments for strongSwan version and patches
-ARG Y_STRONGSWAN_VERSION=6.0.6
+ARG Y_STRONGSWAN_VERSION=6.0.7
+ARG Y_STRONGSWAN_SHA256=e518e34e159514f4c6ba80d1f926cb151e0dd4e3a1d94213171234b8b9ae6f55
 ARG Y_PATCH=yes
 
 # Install build dependencies
@@ -25,8 +29,11 @@ RUN apk add --no-cache \
 
 # Prepare source
 WORKDIR /usr/local/src
-RUN wget --progress=dot:giga https://download.strongswan.org/strongswan-"${Y_STRONGSWAN_VERSION}".tar.bz2 && \
-    tar xjvf strongswan-"${Y_STRONGSWAN_VERSION}".tar.bz2
+RUN wget --progress=dot:giga -O strongswan.tar.bz2 \
+        "https://download.strongswan.org/strongswan-${Y_STRONGSWAN_VERSION}.tar.bz2" && \
+    echo "${Y_STRONGSWAN_SHA256}  strongswan.tar.bz2" | sha256sum -c - && \
+    tar xjf strongswan.tar.bz2 && \
+    rm strongswan.tar.bz2
 
 # Apply patches if needed
 COPY patches/ /ye3ipsec_patch/
@@ -83,10 +90,10 @@ RUN if [ "$Y_PATCH" = "yes" ]; then \
     fi
 
 # Stage 2: Final Production Image
-FROM alpine:3.21.3
+FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 LABEL org.opencontainers.image.title="ye3ipsec-wan"
-LABEL org.opencontainers.image.version="1.1.7"
+LABEL org.opencontainers.image.version="1.1.8"
 LABEL org.opencontainers.image.description="IPSec client and server based on Strongswan and Alpine. Multi-stage build."
 LABEL org.opencontainers.image.authors="arumes31"
 
@@ -95,10 +102,10 @@ ENV Y_LANGUAGE=en_US \
     Y_DEBUG=no \
     Y_IGNORE_CONFIG=no \
     Y_EXTRA_PACKAGE="net-tools traceroute tcpdump ipcalc nano nftables" \
-    Y_URL_IP_CHECK=http://whatismyip.akamai.com \
+    Y_URL_IP_CHECK=https://api.ipify.org \
     Y_URL_IP_CHECK_TIMEOUT=5 \
     Y_PATCH=yes \
-    Y_SHOW_CRED=yes \
+    Y_SHOW_CRED=no \
     TZ=Europe/Paris \
     Y_DATE_FORMAT="%Y-%m-%dT%H:%M:%S%z" \
     Y_PROTO_ESP=esp \
@@ -146,8 +153,7 @@ ENV Y_LANGUAGE=en_US \
 
 # Install runtime packages and copy strongSwan from builder
 # hadolint ignore=DL3018
-RUN apk upgrade --no-cache && \
-    apk add --no-cache \
+RUN apk add --no-cache \
     bash \
     tini \
     tzdata \
@@ -157,7 +163,6 @@ RUN apk upgrade --no-cache && \
     ip6tables \
     iptables \
     nftables \
-    kmod \
     curl \
     openresolv \
     ca-certificates
@@ -166,6 +171,7 @@ COPY --from=builder /tmp/strongswan /
 
 # Add project files
 COPY src/entrypoint.sh /
+COPY src/credential-utils.sh /usr/local/lib/ye3ipsec/credential-utils.sh
 COPY src/i18n/ /i18n/
 COPY src/templates/ /etc/swanctl/ye3ipsec-wan/
 
@@ -178,7 +184,7 @@ EXPOSE 500/udp 4500/udp
 
 # Healthcheck for service status
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD swanctl --stats || exit 1
+    CMD ["swanctl", "--stats"]
 
 ENTRYPOINT ["/sbin/tini", "-g", "--"]
 CMD ["/entrypoint.sh"]

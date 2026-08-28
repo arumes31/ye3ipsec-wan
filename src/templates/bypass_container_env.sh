@@ -6,12 +6,12 @@
 #export Y_LANGUAGE=en_US
 #export Y_DEBUG=no
 #export Y_IGNORE_CONFIG=no
-#export Y_STRONGSWAN_VERSION=6.0.6
+#export Y_STRONGSWAN_VERSION=6.0.7
 #export Y_EXTRA_PACKAGE="net-tools traceroute tcpdump ipcalc nano nftables"
-#export Y_URL_IP_CHECK=http://whatismyip.akamai.com
+#export Y_URL_IP_CHECK=https://api.ipify.org
 #export Y_URL_IP_CHECK_TIMEOUT=5
 #export Y_PATCH=yes
-#export Y_SHOW_CRED=yes
+#export Y_SHOW_CRED=no
 #export TZ=Europe/Paris
 #export Y_DATE_FORMAT="%Y-%m-%dT%H:%M:%S%z"
 

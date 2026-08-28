@@ -6,12 +6,12 @@ These are the env variables and their default values.
 |Y_LANGUAGE | text | en_US | Language. The list is in the folder /i18n |
 |Y_DEBUG | yes/no | no | yes, to show charon messages |
 |Y_IGNORE_CONFIG | yes/no | no | yes, to not apply file changes in the /etc/swanctl folder. A good option if you use a custom /etc/swanctl folder mounted from outside |
-|Y_STRONGSWAN_VERSION | text | 6.0.6 | strongswan's version to download when building image |
+|Y_STRONGSWAN_VERSION | text | 6.0.7 | strongswan's version to download when building image |
 |Y_EXTRA_PACKAGE | text | "net-tools traceroute tcpdump ipcalc nano nftables" | additional package to install in the image |
-|Y_URL_IP_CHECK | url | http://whatismyip.akamai.com | Url that curl will use to retrieve the public IP |
+|Y_URL_IP_CHECK | url | https://api.ipify.org | HTTPS URL that curl will use to retrieve the public IP |
 |Y_URL_IP_CHECK_TIMEOUT | integer | 5 | this is the -m option in curl : Maximum time allowed, in second |
 |Y_PATCH | yes/no | yes | yes, to apply fixes before and/or after strongswan build |
-|Y_SHOW_CRED | yes/no | yes | yes, to display credentials in docker logs command |
+|Y_SHOW_CRED | yes/no | no | Legacy compatibility flag. When enabled, logs only redacted availability/path hints and never raw credentials. |
 |TZ | text | Europe/Paris | time zone, IANA format |
 |Y_DATE_FORMAT | text | "%Y-%m-%dT%H:%M:%S%z" | date format (strftime), mainly used for logs |
 |-|-|-|-|
@@ -161,4 +161,3 @@ These are the env variables and their default values.
 |Y_FILELOG_DEFAULT | integer | 1 | level of logging, for IKE daemon |
 |Y_FILELOG_PATH | path | /var/log/charon.log | path to the log file |
 |Y_FILELOG_APPEND | yes/no | yes | yes, to append to the existing file |
-
