@@ -1,4 +1,13 @@
 # Changelog
+## [Unreleased]
+### Security
+- `Y_SHOW_CRED` now defaults to `no` : secrets are no longer printed in the container logs, a hint shows where to read them
+- generated credentials, keys, p12 files and configs are created with `umask 077`, the credential, private, pkcs12 and conf.d folders are restricted to root
+- strongSwan source archive is verified against a pinned SHA-256 (`Y_STRONGSWAN_SHA256`)
+- `Y_URL_IP_CHECK` now defaults to `https://api.ipify.org`, the answer is only used if it is a valid IPv4 address
+- `Y_XAUTH_PSK_AGGRESSIVE` and `Y_XAUTH_RSA_AGGRESSIVE` default to `no`, IKEv1 aggressive mode PSK is only allowed when `Y_XAUTH_PSK_AGGRESSIVE=yes`
+- warnings are logged when PSK, eap-mschapv2, aggressive mode, a plain http ip check or `Y_SHOW_CRED=yes` are used
+- documented run commands no longer use `SYS_MODULE`, `SYS_ADMIN` and `/lib/modules`, load the kernel modules on the host instead
 ## [1.1.7] - 2026-06-02
 ### Added
 - Project renamed to **ye3ipsec-wan**

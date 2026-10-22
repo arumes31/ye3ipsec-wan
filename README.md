@@ -17,14 +17,19 @@ Support for multiple tunnels, nftables, and automatic WAN routing. Optimized for
 
 # Simple usage
 
+Load the needed kernel modules on the host first, so the container does not need `SYS_MODULE`, `SYS_ADMIN` or a `/lib/modules` mount (see [Prerequisite](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/prerequisite.md#load-kernel-modules-on-the-host)) :
+```bash
+sudo modprobe -a af_key xfrm_user esp4 esp6 ah4 ah6 xfrm4_tunnel xfrm6_tunnel ip_tables ip6_tables iptable_nat iptable_mangle nf_tables
+```
+
 Create a remote access connection with EAP (mschapv2) authentication :
 
 ```bash
 # Podman rootless command
 podman run -dt \
   --runtime=/usr/bin/crun --network=pasta \
-  --cap-add=NET_ADMIN,SYS_MODULE,SYS_ADMIN,NET_RAW \
-  --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /lib/modules:/lib/modules:ro \
+  --cap-add=NET_ADMIN,NET_RAW \
+  --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 \
   -p 500:500/udp -p 4500:4500/udp -e Y_FIREWALL_ENABLE=yes \
   -e Y_EAP_USERS="tux1:StrongPassword1 tux2:StrongPassword2" \
   --name myipsec ghcr.io/arumes31/ye3ipsec-wan
@@ -32,8 +37,8 @@ podman run -dt \
 ```bash
 # Docker command
 docker run -dt \
-  --cap-add=NET_ADMIN --cap-add=SYS_MODULE --cap-add=SYS_ADMIN \
-  --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /lib/modules:/lib/modules:ro \
+  --cap-add=NET_ADMIN --cap-add=NET_RAW \
+  --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 \
   -p 500:500/udp -p 4500:4500/udp -e Y_FIREWALL_ENABLE=yes \
   -e Y_EAP_USERS="tux1:StrongPassword1 tux2:StrongPassword2" \
   --name myipsec ghcr.io/arumes31/ye3ipsec-wan
@@ -43,8 +48,11 @@ docker run -dt \
 # to auto-generate 30 random RSA certificate users, add : -e Y_CERT_USERS_RANDOM=30
 # to auto-generate 50 random PSK users, add : -e Y_PSK_USERS_RANDOM=50
 
-# to see the logs and credentials : run this below command (replace docker by podman if you use podman)
+# to see the logs : run this below command (replace docker by podman if you use podman)
 docker logs myipsec
+
+# credentials are not printed in the logs by default (Y_SHOW_CRED=no), read them inside the container :
+docker exec myipsec sh -c 'ls /etc/swanctl/ye3ipsec-wan/credential ; cat /etc/swanctl/conf.d/eap*.conf'
 
 # to see Strongswan logs (press these 2 keys to exit logs viewing : Ctrl C)
 docker exec -it myipsec swanctl --log
@@ -204,11 +212,13 @@ The credentials are randomly generated, if not set.
 
 The container will generate self signed certificate using external (public) ip address as CN, if not set.  
 
-The container configurations and credentials can be displayed using the command : docker logs containerName  
+The container configurations can be displayed using the command : docker logs containerName. Credentials are only printed there if `Y_SHOW_CRED=yes` (not recommended, logs are often shipped to other systems). Generated credentials are stored, readable by root only, in /etc/swanctl/ye3ipsec-wan/credential and in the /etc/swanctl/conf.d/*.conf files.  
+
+The IKEv2 PSK profile is enabled by default for compatibility : a group PSK lets any PSK holder impersonate the gateway to the other PSK users, prefer certificates (or EAP with clients validating the server certificate) and set `Y_PSK_ENABLE=no` when you do not need it.  
 
 The /etc/swanctl folder is persistent.  
 
-Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, also add NET_RAW if you are using podman.  
+Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, also add NET_RAW if you are using podman. Only add `SYS_MODULE` (with `-v /lib/modules:/lib/modules:ro`) if you cannot load the kernel modules on the host : a compromised container with this right can load kernel modules, which is a host compromise.  
 
 # [Prerequisite](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/prerequisite.md)
 

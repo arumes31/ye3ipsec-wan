@@ -36,6 +36,17 @@ sudo iptables -A INPUT  -p tcp --sport 53 -m state --state ESTABLISHED -j ACCEPT
 # If you use ipv6, just use the same commands by replacing the word iptables by ip6tables
 ```
 
+## Load kernel modules on the host
+
+The container does not need `SYS_MODULE`, `SYS_ADMIN` or a `/lib/modules` mount if the kernel modules are already loaded on the host.
+
+```bash
+sudo modprobe -a af_key xfrm_user esp4 esp6 ah4 ah6 xfrm4_tunnel xfrm6_tunnel ip_tables ip6_tables iptable_nat iptable_mangle nf_tables
+
+# To make persistent :
+printf '%s\n' af_key xfrm_user esp4 esp6 ah4 ah6 xfrm4_tunnel xfrm6_tunnel ip_tables ip6_tables iptable_nat iptable_mangle nf_tables | sudo tee /etc/modules-load.d/ye3ipsec-wan.conf
+```
+
 ## Set runtime status of some kernel parameters 
 
 ```bash

@@ -3,6 +3,9 @@ FROM alpine:3.24.2@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4c
 
 # Build arguments for strongSwan version and patches
 ARG Y_STRONGSWAN_VERSION=6.1.0
+# SHA-256 of strongswan-${Y_STRONGSWAN_VERSION}.tar.bz2, update together with the version
+# (verified against the .sig made with the strongSwan release key DF42C170B34DBA77)
+ARG Y_STRONGSWAN_SHA256=fe6c97481298767213cfc2e9a1da29fdd8018d481ff4cb9cf0283099654f20d4
 ARG Y_PATCH=yes
 
 # Install build dependencies
@@ -95,10 +98,10 @@ ENV Y_LANGUAGE=en_US \
     Y_DEBUG=no \
     Y_IGNORE_CONFIG=no \
     Y_EXTRA_PACKAGE="net-tools traceroute tcpdump ipcalc nano nftables" \
-    Y_URL_IP_CHECK=http://whatismyip.akamai.com \
+    Y_URL_IP_CHECK=https://api.ipify.org \
     Y_URL_IP_CHECK_TIMEOUT=5 \
     Y_PATCH=yes \
-    Y_SHOW_CRED=yes \
+    Y_SHOW_CRED=no \
     TZ=Europe/Paris \
     Y_DATE_FORMAT="%Y-%m-%dT%H:%M:%S%z" \
     Y_PROTO_ESP=esp \
@@ -135,7 +138,7 @@ ENV Y_LANGUAGE=en_US \
     Y_FIREWALL_COMMENT_PREFIX=ye3ipsec-wan \
     Y_CERT_ENABLE=yes \
     Y_EAP_ENABLE=yes \
-    Y_PSK_ENABLE=yes \
+    Y_PSK_ENABLE=yes     Y_XAUTH_PSK_AGGRESSIVE=no     Y_XAUTH_RSA_AGGRESSIVE=no \
     Y_REVOCATION_LOAD=yes \
     Y_FARP_LOAD=yes \
     Y_FORECAST_LOAD=yes \
