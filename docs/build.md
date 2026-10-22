@@ -13,6 +13,12 @@ podman logs my_customized_ipsec
 podman exec -it my_customized_ipsec sh -c "swanctl --version ; swanctl --stats"
 ```
 
+The strongSwan source archive is verified with the `Y_STRONGSWAN_SHA256` build argument. If you change `Y_STRONGSWAN_VERSION`, verify the new archive against its `.sig` (strongSwan release key) and pass its SHA-256 :
+
+```bash
+podman build --build-arg Y_STRONGSWAN_VERSION=x.y.z --build-arg Y_STRONGSWAN_SHA256=<sha256> -t ye3ipsec-wan .
+```
+
 If you edit files from Windows to Linux, you may encounter problems with the build. You need to use UNIX-style line endings, before building
 
 ```bash
