@@ -7,6 +7,9 @@
 cp "/usr/share/zoneinfo/$TZ" /etc/localtime
 echo "$TZ" > /etc/timezone
 
+# generated secrets, keys and configs must only be readable by root
+umask 077
+
 # ============ [ global variable ] ============
 
 # date
@@ -35,13 +38,26 @@ vg_name=ye3ipsec-wan
 vg_interface=$(route | awk '/^default/{print $NF}')
 vg_interface_ip=$(ip addr show dev "$vg_interface" | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
 
-# get external ip
-vg_ip=$(curl -m "$Y_URL_IP_CHECK_TIMEOUT" -s "$Y_URL_IP_CHECK")
+# get external ip, only keep a valid ipv4 address
+vg_ip=$(curl -m "$Y_URL_IP_CHECK_TIMEOUT" -s "$Y_URL_IP_CHECK" | tr -d '[:space:]')
+if [[ ! $vg_ip =~ ^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}$ ]]; then
+	vg_ip=""
+fi
 
 # credential directory, without ending slash
 vg_dir_credential=$vg_dir_swanctl/ye3ipsec-wan/credential
 if [[ ! -d $vg_dir_credential ]]; then
-    mkdir $vg_dir_credential
+    mkdir -p $vg_dir_credential
+fi
+
+# restrict access to directories holding secrets and private keys (also for existing volumes)
+if [[ $Y_IGNORE_CONFIG == "no" ]]; then
+	for vl_dir in "$vg_dir_credential" $vg_dir_swanctl/private $vg_dir_swanctl/pkcs12 $vg_dir_swanctl/conf.d; do
+		if [[ -d $vl_dir ]]; then
+			chmod 700 "$vl_dir"
+			chmod -R go-rwx "$vl_dir" 2>/dev/null
+		fi
+	done
 fi
 
 # id and password parameters
@@ -455,6 +471,23 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 
 	f_log "$i_apply_configuration"
 
+	# security warnings
+	if [[ $Y_URL_IP_CHECK == "http://"* ]]; then
+		f_log "WARNING : Y_URL_IP_CHECK uses plain http, the public ip (server certificate CN) can be spoofed. Use https or set Y_SERVER_CERT_CN"
+	fi
+	if [[ $Y_SHOW_CRED == "yes" ]]; then
+		f_log "WARNING : Y_SHOW_CRED=yes, VPN secrets are written to the container logs. Set Y_SHOW_CRED=no once the clients are configured"
+	fi
+	if [[ $Y_PSK_ENABLE == "yes" ]]; then
+		f_log "WARNING : Y_PSK_ENABLE=yes, any holder of the group PSK can impersonate the gateway to other PSK users. Prefer certificates or EAP, or set Y_PSK_ENABLE=no"
+	fi
+	if [[ $Y_EAP_ENABLE == "yes" ]] && [[ $Y_EAP_REMOTE_AUTH == *"mschapv2"* ]]; then
+		f_log "WARNING : Y_EAP_REMOTE_AUTH=$Y_EAP_REMOTE_AUTH, clients must validate the server certificate (mschapv2 is crackable offline by a rogue server). Consider Y_EAP_REMOTE_AUTH=eap-tls"
+	fi
+	if [[ $Y_XAUTH_PSK_ENABLE == "yes" ]] && [[ $Y_XAUTH_PSK_AGGRESSIVE == "yes" ]]; then
+		f_log "WARNING : Y_XAUTH_PSK_AGGRESSIVE=yes, IKEv1 aggressive mode exposes a hash of the PSK to offline cracking"
+	fi
+
 	# filelog symlink
 	ln -sfn "$Y_FILELOG_PATH" /var/log/charon.log > /dev/null 2>&1
 
@@ -467,7 +500,8 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
 	
 	# generate strongswan.conf and symbolic link to /etc/strongswan.conf
 	
-	if [[ $Y_XAUTH_PSK_ENABLE == "yes" ]] || [[ $Y_XAUTH_RSA_ENABLE == "yes" ]] ; then
+	# only needed by IKEv1 PSK in aggressive mode
+	if [[ $Y_XAUTH_PSK_ENABLE == "yes" ]] && [[ $Y_XAUTH_PSK_AGGRESSIVE == "yes" ]] ; then
 		vg_aggressive=yes
 	else 
 		vg_aggressive=no
@@ -781,6 +815,13 @@ if [[ $Y_IGNORE_CONFIG == "no" ]]; then
       		fi
 	else
 		mv -f $vg_dir_swanctl/conf.d/client.conf $vg_dir_swanctl/conf.d/client-"$vg_date".dis 2>/dev/null
+	fi
+
+	if [[ $Y_SHOW_CRED != "yes" ]]; then
+		f_log "credentials are not shown in logs (Y_SHOW_CRED=no), read them inside the container :"
+		f_log "    generated credentials : ls $vg_dir_credential ; cat $vg_dir_credential/<NAME>"
+		f_log "    connection secrets : cat $vg_dir_swanctl/conf.d/<profile>.conf"
+		f_log "    client certificates : ls $vg_dir_swanctl/pkcs12 ; cat $vg_dir_swanctl/conf.d/cert_users*.txt"
 	fi
 	
 else

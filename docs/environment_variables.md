@@ -8,10 +8,10 @@ These are the env variables and their default values.
 |Y_IGNORE_CONFIG | yes/no | no | yes, to not apply file changes in the /etc/swanctl folder. A good option if you use a custom /etc/swanctl folder mounted from outside |
 |Y_STRONGSWAN_VERSION | text | 6.0.6 | strongswan's version to download when building image |
 |Y_EXTRA_PACKAGE | text | "net-tools traceroute tcpdump ipcalc nano nftables" | additional package to install in the image |
-|Y_URL_IP_CHECK | url | http://whatismyip.akamai.com | Url that curl will use to retrieve the public IP |
+|Y_URL_IP_CHECK | url | https://api.ipify.org | Url that curl will use to retrieve the public IP (used as server certificate CN if Y_SERVER_CERT_CN is not set). Use https, the answer is only used if it is a valid IPv4 address |
 |Y_URL_IP_CHECK_TIMEOUT | integer | 5 | this is the -m option in curl : Maximum time allowed, in second |
 |Y_PATCH | yes/no | yes | yes, to apply fixes before and/or after strongswan build |
-|Y_SHOW_CRED | yes/no | yes | yes, to display credentials in docker logs command |
+|Y_SHOW_CRED | yes/no | no | yes, to display credentials (secrets included) in docker logs command. Not recommended : read them with docker exec in /etc/swanctl/ye3ipsec-wan/credential and /etc/swanctl/conf.d instead |
 |TZ | text | Europe/Paris | time zone, IANA format |
 |Y_DATE_FORMAT | text | "%Y-%m-%dT%H:%M:%S%z" | date format (strftime), mainly used for logs |
 |-|-|-|-|
@@ -64,14 +64,14 @@ These are the env variables and their default values.
 |Y_CERT_P12_EXTRA | yes/no | yes | RA IKEv2 Certificate profile : yes, to add more p12 format (p12 legacy, p12 legacy no CA, p12 legacy pem) |
 |-|-|-|-|
 |Y_EAP_ENABLE | yes/no | yes | yes, to activate the RA (remote access) IKEv2 EAP profile |
-|Y_EAP_REMOTE_AUTH | text | eap-mschapv2 | RA IKEv2 EAP profile : remote authentication method |
+|Y_EAP_REMOTE_AUTH | text | eap-mschapv2 | RA IKEv2 EAP profile : remote authentication method. With eap-mschapv2 clients must validate the server certificate, prefer eap-tls when possible |
 |Y_EAP_REMOTE_EAP_ID | text | %any | RA IKEv2 EAP profile : remote eap identity |
 |Y_EAP_USERNAME | text | *(randomly generated, if not set)* | RA IKEv2 EAP profile : remote username  |
 |Y_EAP_PASSWORD | password | *(randomly generated, if not set)* | RA IKEv2 EAP profile : remote password|
 |Y_EAP_USERS | text| | RA IKEv2 EAP profile : list of remote users to create (username:password) separated by a blank space. eg: "emily:123789 elisabeth:987456" |
 |Y_EAP_USERS_RANDOM | integer | | RA IKEv2 EAP profile : number of remote users to randomly create |
 |-|-|-|-|
-|Y_PSK_ENABLE | yes/no | yes | yes, to activate the RA (remote access) IKEv2 PSK profile |
+|Y_PSK_ENABLE | yes/no | yes | yes, to activate the RA (remote access) IKEv2 PSK profile. Any holder of a shared group PSK can impersonate the gateway, set to no if not needed |
 |Y_PSK_LOCAL_ID | text | *(randomly generated, if not set)* | RA IKEv2 PSK profile : local identity |
 |Y_PSK_REMOTE_ID | text | *(randomly generated, if not set)* | RA IKEv2 PSK profile : remote identity |
 |Y_PSK_SECRET | password | *(randomly generated, if not set)* | RA IKEv2 PSK profile : shared secret |
@@ -79,7 +79,7 @@ These are the env variables and their default values.
 |Y_PSK_USERS_RANDOM | integer | | RA IKEv2 PSK profile : number of remote users to randomly create |
 |-|-|-|-|
 |Y_XAUTH_PSK_ENABLE | yes/no | no | yes, to activate the RA (remote access) IKEv1 XAUTH PSK profile |
-|Y_XAUTH_PSK_AGGRESSIVE | yes/no | yes | RA IKEv1 XAUTH PSK profile : yes, to enable aggressive mode. (use no, for main mode) |
+|Y_XAUTH_PSK_AGGRESSIVE | yes/no | no | RA IKEv1 XAUTH PSK profile : yes, to enable aggressive mode (exposes a PSK hash to offline cracking). no, for main mode |
 |Y_XAUTH_PSK_REMOTE_AUTH | text | xauth | RA IKEv1 XAUTH PSK profile : remote authentication method |
 |Y_XAUTH_PSK_LOCAL_ID | text | *(randomly generated, if not set)* | RA IKEv1 XAUTH PSK profile : local identity |
 |Y_XAUTH_PSK_REMOTE_ID | text | *(randomly generated, if not set)* | RA IKEv1 XAUTH PSK profile : remote identity |
