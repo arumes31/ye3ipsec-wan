@@ -3,9 +3,9 @@
 ![Build Status](https://github.com/arumes31/ye3ipsec-wan/actions/workflows/docker-image.yml/badge.svg)
 ![Security Scan](https://github.com/arumes31/ye3ipsec-wan/actions/workflows/security.yml/badge.svg)
 ![License](https://img.shields.io/github/license/arumes31/ye3ipsec-wan)
-![Docker Pulls](https://img.shields.io/docker/pulls/arumes31/ye3ipsec-wan)
+![Container](https://img.shields.io/badge/ghcr.io-arumes31%2Fye3ipsec--wan-2496ED?logo=docker&logoColor=white)
 
-**Modernized IPSec Site-to-Site & Remote Access gateway based on strongSwan 6.0.6 and Alpine.**
+**Modernized IPSec Site-to-Site & Remote Access gateway based on strongSwan 6.1.0 and Alpine 3.24.**
 
 Support for multiple tunnels, nftables, and automatic WAN routing. Optimized for performance and security with high-security cipher suites by default.
 
@@ -245,9 +245,9 @@ Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, al
 
 | name | version |
 | :- |:- |
-|ye3ipsec-wan | 1.1.7 |
-|strongswan | 6.0.6 |
-|alpine | 3.21 |
+|ye3ipsec-wan | 1.1.8 |
+|strongswan | 6.1.0 |
+|alpine | 3.24.3 |
 
 # [Changelog](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/changelog.md)
 

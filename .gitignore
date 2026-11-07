@@ -27,3 +27,9 @@ swanctl/x509pkcs12/*.p12
 
 # GitHub Actions local testing
 .act/
+graphify-out/
+.claudeignore
+
+docs/
+.stfolder/
+.stignore
