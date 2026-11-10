@@ -61,7 +61,9 @@ function f_serial(){
 }
 
 function f_revoked(){
-	f_vol "openssl crl -in /etc/swanctl/x509crl/ye3ipsec-wan.crl -noout -text 2>/dev/null" | grep -q "Serial Number: $1\$"
+	local vl_crl
+	vl_crl=$(f_vol "openssl crl -in /etc/swanctl/x509crl/ye3ipsec-wan.crl -noout -text 2>/dev/null")
+	[[ $vl_crl == *"Serial Number: $1"* ]]
 }
 
 echo "# first start"

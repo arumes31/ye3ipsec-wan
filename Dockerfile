@@ -29,7 +29,8 @@ RUN apk add --no-cache \
 # Prepare source
 WORKDIR /usr/local/src
 RUN wget --progress=dot:giga https://download.strongswan.org/strongswan-"${Y_STRONGSWAN_VERSION}".tar.bz2 && \
-    echo "${Y_STRONGSWAN_SHA256}  strongswan-${Y_STRONGSWAN_VERSION}.tar.bz2" | sha256sum -c - && \
+    echo "${Y_STRONGSWAN_SHA256}  strongswan-${Y_STRONGSWAN_VERSION}.tar.bz2" > strongswan.sha256 && \
+    sha256sum -c strongswan.sha256 && \
     tar xjvf strongswan-"${Y_STRONGSWAN_VERSION}".tar.bz2
 
 # Apply patches if needed
