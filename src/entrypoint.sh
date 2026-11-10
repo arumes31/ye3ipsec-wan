@@ -251,7 +251,10 @@ function f_revoke_certificates(){
 			f_log "ERROR : unable to update the CRL $vg_file_crl, refusing to start while removed client certificates are still valid"
 			exit 1
 		fi
-		mv -f "$vg_file_crl.tmp" "$vg_file_crl"
+		if ! mv -f "$vg_file_crl.tmp" "$vg_file_crl"; then
+			f_log "ERROR : unable to write the CRL $vg_file_crl, refusing to start while removed client certificates are still valid"
+			exit 1
+		fi
 	fi
 
 	for vl_suffix in "$@"; do
@@ -339,11 +342,11 @@ function f_sync_users(){
 			;;
 		2)
 			f_log "$i_remove : $1 (list is empty)"
-			mv -f "$vl_conf" "$vg_dir_swanctl/conf.d/$1-$vg_date.dis"
 			if [[ -n $5 ]]; then
 				mv -f "$vg_dir_swanctl/conf.d/$5.conf" "$vg_dir_swanctl/conf.d/$5-$vg_date.dis" 2>/dev/null
 			fi
-			f_list_commit "$1"
+			# keep the state (retry on next start) if the users file could not be disabled
+			mv -f "$vl_conf" "$vg_dir_swanctl/conf.d/$1-$vg_date.dis" && f_list_commit "$1"
 			;;
 	esac
 }
@@ -560,11 +563,10 @@ function f_sync_cert_users(){
 
 	if [[ $vl_state -eq 2 ]]; then
 		rm -f "$vl_txt.tmp"
-		mv -f "$vl_txt" "$vg_dir_swanctl/conf.d/cert_users-$vg_date.dis"
+		mv -f "$vl_txt" "$vg_dir_swanctl/conf.d/cert_users-$vg_date.dis" && f_list_commit cert_users
 	else
-		mv -f "$vl_txt.tmp" "$vl_txt"
+		mv -f "$vl_txt.tmp" "$vl_txt" && f_list_commit cert_users
 	fi
-	f_list_commit cert_users
 }
 
 # synchronise the random client certificates with Y_CERT_USERS_RANDOM : existing certificates are kept,
