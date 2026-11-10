@@ -29,6 +29,7 @@ RUN apk add --no-cache \
 # Prepare source
 WORKDIR /usr/local/src
 RUN wget --progress=dot:giga https://download.strongswan.org/strongswan-"${Y_STRONGSWAN_VERSION}".tar.bz2 && \
+    echo "${Y_STRONGSWAN_SHA256}  strongswan-${Y_STRONGSWAN_VERSION}.tar.bz2" | sha256sum -c - && \
     tar xjvf strongswan-"${Y_STRONGSWAN_VERSION}".tar.bz2
 
 # Apply patches if needed
@@ -137,9 +138,12 @@ ENV Y_LANGUAGE=en_US \
     Y_FIREWALL_INTERNET=yes \
     Y_FIREWALL_COMMENT_PREFIX=ye3ipsec-wan \
     Y_CERT_ENABLE=yes \
+    Y_CERT_DAYS=365 \
     Y_EAP_ENABLE=yes \
     Y_PSK_ENABLE=yes     Y_XAUTH_PSK_AGGRESSIVE=no     Y_XAUTH_RSA_AGGRESSIVE=no \
     Y_REVOCATION_LOAD=yes \
+    Y_REVOCATION_ENABLE_CRL=yes \
+    Y_REVOCATION_ENABLE_OCSP=yes \
     Y_FARP_LOAD=yes \
     Y_FORECAST_LOAD=yes \
     Y_BYPASSLAN_LOAD=no \

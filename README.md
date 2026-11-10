@@ -218,6 +218,10 @@ The IKEv2 PSK profile is enabled by default for compatibility : a group PSK lets
 
 The /etc/swanctl folder is persistent.  
 
+The user lists are applied on every start : when `Y_EAP_USERS`, `Y_PSK_USERS`, `Y_CERT_USERS` or `Y_S2S_PSK_USERS` changes, the generated users are rebuilt from the list, and emptying a list removes its users. Generated parts of an entry (for example a missing password) are regenerated when its list changes, so set them explicitly if they must stay stable. Lowering a `*_USERS_RANDOM` count removes the last random users, raising it adds new ones. Certificates of users removed from `Y_CERT_USERS` or `Y_CERT_USERS_RANDOM` are revoked in `/etc/swanctl/x509crl/ye3ipsec-wan.crl` (CRL checking is enabled by default, `Y_REVOCATION_ENABLE_CRL=yes`) and their files are deleted. A users file created by an older version from a list with generated credentials is kept until you delete it.  
+
+The scripts in /etc/swanctl/ye3ipsec-wan (firewall.sh, bypass_container_env.sh and the templates) are run as root : the container refuses to start if they, that folder or /etc/swanctl itself are not owned by root (`chown root:root /etc/swanctl ; chown -R root:root /etc/swanctl/ye3ipsec-wan` on a bind mount).  
+
 Important, you need at least : `--cap-add NET_ADMIN` for strongswan to start, also add NET_RAW if you are using podman. Only add `SYS_MODULE` (with `-v /lib/modules:/lib/modules:ro`) if you cannot load the kernel modules on the host : a compromised container with this right can load kernel modules, which is a host compromise.  
 
 # [Prerequisite](https://github.com/arumes31/ye3ipsec-wan/blob/main/docs/prerequisite.md)
