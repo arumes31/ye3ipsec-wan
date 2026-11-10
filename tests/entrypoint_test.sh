@@ -69,7 +69,7 @@ function f_revoked(){
 echo "# first start"
 f_start -e Y_EAP_USERS="alice:pw1 bob:pw2" -e Y_EAP_USERS_RANDOM=3 \
 	-e Y_PSK_USERS="secret1:a1:b1 secret2:a2:b2" \
-	-e Y_CERT_USERS="carol:pc dave:pd" -e Y_CERT_USERS_RANDOM=2 \
+	-e Y_CERT_USERS="carol:pc dave:pd dave.x:pdx" -e Y_CERT_USERS_RANDOM=2 \
 	-e Y_PSK_SECRET=firstsecret || exit 1
 f_stop
 
@@ -88,7 +88,7 @@ vg_random_cert_removed=$(f_serial "${vg_random_certs[1]}")
 echo "# second start, with shorter lists"
 f_start -e Y_EAP_USERS="alice:pw1" -e Y_EAP_USERS_RANDOM=1 \
 	-e Y_PSK_USERS="secret1:a1:b1" \
-	-e Y_CERT_USERS="carol:pc" -e Y_CERT_USERS_RANDOM=1 || exit 1
+	-e Y_CERT_USERS="carol:pc dave.x:pdx" -e Y_CERT_USERS_RANDOM=1 || exit 1
 f_check "CRL loaded by swanctl" 'docker exec "$vg_name" swanctl --load-creds --noprompt 2>&1 | grep -q "ye3ipsec-wan.crl"'
 f_stop
 
@@ -100,6 +100,7 @@ f_check "kept certificate of carol is unchanged" '[[ $(f_serial carol) == "$vg_c
 f_check "certificate of carol is not revoked" '! f_revoked "$vg_carol"'
 f_check "certificate of dave is revoked" 'f_revoked "$vg_dave"'
 f_check "certificate files of dave are deleted" '! f_vol "ls /etc/swanctl/x509/clientCert_dave.pem /etc/swanctl/pkcs12/clientCert_dave.p12" > /dev/null 2>&1'
+f_check "pkcs12 files of dave.x are kept when dave is removed" 'f_vol "test -s /etc/swanctl/pkcs12/clientCert_dave.x.p12 && test -s /etc/swanctl/pkcs12/clientCert_dave.x.pem.p12"'
 f_check "first random certificate is kept" '[[ $(f_serial "${vg_random_certs[0]}") == "$vg_random_cert_kept" ]] && ! f_revoked "$vg_random_cert_kept"'
 f_check "second random certificate is revoked" 'f_revoked "$vg_random_cert_removed"'
 f_check "env secret persisted, no fallback to an older value" '[[ $(f_vol "cat /etc/swanctl/ye3ipsec-wan/credential/Y_PSK_SECRET") == firstsecret ]]'
