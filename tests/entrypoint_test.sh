@@ -89,7 +89,8 @@ echo "# second start, with shorter lists"
 f_start -e Y_EAP_USERS="alice:pw1" -e Y_EAP_USERS_RANDOM=1 \
 	-e Y_PSK_USERS="secret1:a1:b1" \
 	-e Y_CERT_USERS="carol:pc dave.x:pdx" -e Y_CERT_USERS_RANDOM=1 || exit 1
-f_check "CRL loaded by swanctl" 'docker exec "$vg_name" swanctl --load-creds --noprompt 2>&1 | grep -q "ye3ipsec-wan.crl"'
+vg_creds=$(docker exec "$vg_name" swanctl --load-creds --noprompt 2>&1)
+f_check "CRL loaded by swanctl" '[[ $vg_creds == *"ye3ipsec-wan.crl"* ]]'
 f_stop
 
 f_check "removed eap user bob is gone" '! f_vol "grep -q \"id = bob \" /etc/swanctl/conf.d/eap_users.conf"'
