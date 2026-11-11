@@ -1,10 +1,15 @@
 name: "CodeQL"
 
 on:
+  # Only the `actions` language is analysed, so only workflow/action changes matter.
   push:
     branches: [ "main", "master" ]
+    paths:
+      - ".github/**"
   pull_request:
     branches: [ "main", "master" ]
+    paths:
+      - ".github/**"
   schedule:
     - cron: '0 0 * * 0'
 
@@ -12,13 +17,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       actions: read
       contents: read
